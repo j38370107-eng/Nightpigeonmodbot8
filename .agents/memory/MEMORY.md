@@ -5,3 +5,4 @@
 - [Anti-raid system](antiraid.md) — rebuilt with action levels 1–4, new-account detection, verification gate, user+role whitelist; DB key "antiraid"
 - [Anti-nuke system](antinuke.md) — rebuilt with 9 thresholds (incl. webhookDelete/massTimeout), recovery cache, dangerous-perm watch, server-update watch, DM owner, role whitelist; DB key "antinuke"
 - [Server logging no automod](serverlogging-no-automod.md) — automod category removed from LogCategory type, EVENT_CATEGORY map, serverLogs.ts listener, and Logging.tsx dashboard
+- [YAML config system](yaml-config-system.md) — additive YAML layer on top of existing bot; guild_configs table, guildConfig.ts store, yamlLevels.ts, yamlFormatter.ts; hooks in messageCreate for prefix/aliases/presets/levels

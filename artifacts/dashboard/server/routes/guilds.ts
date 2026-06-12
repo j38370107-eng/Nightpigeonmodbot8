@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { dbGet, dbSet, dbDelete, dbGetAll, dbGetByGuildPrefix } from "../db.js";
+import { dbGet, dbSet, dbDelete, dbGetAll, dbGetByGuildPrefix, pool } from "../db.js";
 import {
   getGuildChannels,
   getGuildRoles,
@@ -918,6 +918,19 @@ const DAY_MS_YAML = 86_400_000;
 router.get("/:guildId/yaml-config", ...auth, async (req: any, res: any) => {
   const { guildId } = req.params;
 
+  // If raw YAML exists in guild_configs, return it directly (preferred)
+  try {
+    const rawRes = await pool.query(
+      "SELECT config FROM guild_configs WHERE guild_id = $1",
+      [guildId]
+    );
+    if (rawRes.rows[0]?.config) {
+      return res.json({ yaml: rawRes.rows[0].config as string });
+    }
+  } catch {
+    // table may not exist yet — fall through to generate from JSON stores
+  }
+
   const [
     settings, muteConfig, modRoles, protectedRoles, lockdownChannels,
     automodCfg, antinukeCfg, antiraidCfg, serverlogCfg, ticketCfg,
@@ -1083,9 +1096,22 @@ router.put("/:guildId/yaml-config", ...auth, async (req: any, res: any) => {
 
   await Promise.all(saves);
 
+  // Save raw YAML to guild_configs so the bot can read it directly
+  try {
+    await pool.query(
+      `INSERT INTO guild_configs (guild_id, config)
+       VALUES ($1, $2)
+       ON CONFLICT (guild_id) DO UPDATE SET config = EXCLUDED.config`,
+      [guildId, yamlText]
+    );
+  } catch {
+    // non-fatal if table doesn't exist yet
+  }
+
   // Notify bot to refresh caches
   const botApiUrl = process.env["BOT_API_URL"] ?? "http://localhost:3000";
   fetch(`${botApiUrl}/api/cache/automod/${guildId}`, { method: "POST" }).catch(() => {});
+  fetch(`${botApiUrl}/api/cache/yaml-config/${guildId}`, { method: "POST" }).catch(() => {});
 
   res.json({ ok: true });
 });

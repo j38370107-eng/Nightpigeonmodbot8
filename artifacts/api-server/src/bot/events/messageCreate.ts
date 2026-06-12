@@ -10,6 +10,8 @@ import { runAutomod } from "../lib/runAutomod";
 import { isCommandDisabled } from "../store/disabledCommands";
 import { checkCommandPerm } from "../store/commandPerms";
 import { getCustomCommand } from "../store/customCommands";
+import { getCachedConfig } from "../store/guildConfig";
+import { getUserLevel, getRequiredLevel } from "../lib/yamlLevels";
 
 // ── Cooldown tracker (in-memory, resets on restart) ──────────────────────────
 // key: `cmdId:scope` where scope = userId | channelId | "global"
@@ -175,8 +177,11 @@ export function registerMessageHandler(client: Client) {
     }
 
     const guildId = message.guild.id;
-    const prefix = getPrefix(guildId);
-    const isCommand = message.content.startsWith(prefix);
+    const guildCfg = getCachedConfig(guildId);
+    const yamlPrefix = guildCfg.prefix;
+    const dbPrefix = getPrefix(guildId);
+    const isCommand = message.content.startsWith(yamlPrefix) || message.content.startsWith(dbPrefix);
+    const prefix = message.content.startsWith(yamlPrefix) ? yamlPrefix : dbPrefix;
 
     // ── AFK: clear status if AFK user sends a message ────────────────────────
     if (!isCommand) {
@@ -222,6 +227,14 @@ export function registerMessageHandler(client: Client) {
     let command = (client as any).commands?.get(commandName);
     let commandArgs = args;
 
+    // ── YAML aliases (take priority over DB aliases) ──────────────────────────
+    if (!command) {
+      const yamlAliases = getCachedConfig(guildId).plugins?.command_aliases?.config?.aliases ?? {};
+      const yamlAlias = yamlAliases[commandName];
+      if (yamlAlias) command = (client as any).commands?.get(yamlAlias);
+    }
+
+    // ── DB aliases ────────────────────────────────────────────────────────────
     if (!command) {
       const customAlias = getAlias(guildId, commandName);
       if (customAlias) {
@@ -243,6 +256,21 @@ export function registerMessageHandler(client: Client) {
         } else {
           commandArgs = [args[0]!, ...reasonWords, ...args.slice(1)];
         }
+      }
+    }
+
+    // ── Resolve $preset tokens in args (YAML preset_reasons) ─────────────────
+    // e.g. "!ban @user $spam" → reason becomes "Spamming in chat"
+    {
+      const presets = getCachedConfig(guildId).plugins?.preset_reasons?.config?.presets ?? {};
+      if (Object.keys(presets).length > 0) {
+        commandArgs = commandArgs.map((arg) => {
+          if (arg.startsWith("$")) {
+            const key = arg.slice(1);
+            return (presets as Record<string, string>)[key] ?? arg;
+          }
+          return arg;
+        });
       }
     }
 
@@ -314,7 +342,14 @@ export function registerMessageHandler(client: Client) {
     // Owner-only guard
     if (command.ownerOnly && message.author.id !== OWNER_ID) return;
 
-    if (command.requiredPermissions?.length > 0 && message.guild) {
+    // ── YAML level check ──────────────────────────────────────────────────────
+    // If the user's YAML level meets the command requirement, bypass Discord
+    // permission checks entirely. Otherwise fall through to the existing system.
+    const userYamlLevel = getUserLevel(message);
+    const requiredYamlLevel = getRequiredLevel(guildId, command.name);
+    const yamlLevelPasses = userYamlLevel >= requiredYamlLevel;
+
+    if (command.requiredPermissions?.length > 0 && message.guild && !yamlLevelPasses) {
       const member = message.member;
       if (!member) return;
 

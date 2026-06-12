@@ -13,6 +13,12 @@ export const pool = new Pool({
 
 export async function initDb(): Promise<void> {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS guild_configs (
+      guild_id TEXT PRIMARY KEY,
+      config   TEXT NOT NULL DEFAULT ''
+    )
+  `);
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS bot_store (
       store_name TEXT NOT NULL,
       key        TEXT NOT NULL,

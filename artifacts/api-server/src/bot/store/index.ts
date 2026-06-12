@@ -1,4 +1,5 @@
 import { initDb } from "./db";
+import { initGuildConfigStore } from "./guildConfig";
 import { initAliasesStore } from "./aliases";
 import { initAltsStore } from "./alts";
 import { initAntinukeStore } from "./antinuke";
@@ -26,6 +27,7 @@ import { logger } from "../../lib/logger";
 
 export async function initAllStores(): Promise<void> {
   await initDb();
+  await initGuildConfigStore();
   await Promise.all([
     initAliasesStore(),
     initAltsStore(),
