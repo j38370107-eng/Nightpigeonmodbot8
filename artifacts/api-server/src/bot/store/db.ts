@@ -9,7 +9,7 @@ if (!url) {
 
 export const pool = new Pool({
   connectionString: url,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: true },
   max: 5,
 });
 
