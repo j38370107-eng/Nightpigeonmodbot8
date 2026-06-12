@@ -41,6 +41,18 @@ app.use("/api/guilds", guildsRouter);
 app.use("/api/apply", applyRouter);
 app.use("/api", statsRouter);
 
+// Proxy /ping to the bot API server so uptime monitors can use the dashboard URL
+app.get("/ping", async (_req: any, res: any) => {
+  const botApiUrl = process.env["BOT_API_URL"] ?? "http://localhost:3000";
+  try {
+    const response = await fetch(`${botApiUrl}/ping`);
+    const text = await response.text();
+    res.status(response.status).send(text);
+  } catch {
+    res.status(503).send("Bot API unreachable");
+  }
+});
+
 // process.cwd() is always the project root (artifacts/dashboard),
 // regardless of whether this file is running as source (server/) or
 // compiled bundle (dist/server/). Using __dirname would double the
