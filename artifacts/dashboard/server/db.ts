@@ -1,11 +1,13 @@
 import { Pool } from "pg";
 
+process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+
 const url = process.env["DATABASE_URL"] ?? process.env["BOT_DATABASE_URL"];
 if (!url) throw new Error("DATABASE_URL is required for dashboard");
 
 export const pool = new Pool({
   connectionString: url,
-  ssl: { rejectUnauthorized: true },
+  ssl: { rejectUnauthorized: false },
   max: 5,
 });
 
