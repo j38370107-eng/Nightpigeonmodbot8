@@ -33,6 +33,9 @@ export interface DocSection {
 }
 
 export const docSections: DocSection[] = [
+  // ────────────────────────────────────────────────────────────────────────────
+  // GENERAL
+  // ────────────────────────────────────────────────────────────────────────────
   {
     id: "general",
     title: "General",
@@ -43,226 +46,220 @@ export const docSections: DocSection[] = [
         type: "article",
         content: `# Introduction
 
-**NightPigeon** is a private, feature-rich moderation and utility bot for Discord, designed with large servers and reliability in mind.
+**NightPigeon** is a private Discord bot focused on security, moderation automation, and clean server management.
 
-## What is NightPigeon?
+## What NightPigeon does
 
-NightPigeon provides a comprehensive suite of tools for Discord server administrators and moderators, including:
+- **Anti-Nuke** — Detects and stops mass channel/role deletions, bans, webhooks, and server renames in real time
+- **Anti-Raid** — Detects mass join events and suspicious new accounts, with 4 action levels up to full lockdown
+- **AutoMod** — Automatic message filtering: bad words, spam, invite links, mass mentions, wall text, and more
+- **Server Logging** — Detailed event logs for messages, members, channels, roles, and voice
+- **Shortcuts & Aliases** — Define one-word punishment shortcuts and command aliases for your staff
+- **YAML Configuration** — All settings are driven by a per-server YAML config editable from the dashboard
 
-- **Moderation** — Ban, kick, mute, warn, and manage cases with a full infraction history
-- **Auto-moderation** — Automatic detection and action for spam, bad words, and invite links
-- **Security** — Anti-nuke and anti-raid systems to protect your server
-- **Logging** — Detailed logs for messages, members, channels, and more
-- **Utility** — Tags, reminders, role management, slowmode control, and much more
-- **Configuration** — Flexible YAML-based configuration with per-plugin settings and permission levels
+## Default prefix
 
-## Getting Started
+The default command prefix is \`>\`. Your server admins can change it with \`>changeprefix\`.
 
-1. Invite the bot to your server using the invite link on the home page
-2. Open the **Dashboard** and select your server
-3. Navigate to the **Config** tab to set up your YAML configuration
-4. Enable and configure the plugins you want to use
+## Getting started
 
-## Dashboard
+1. Invite the bot to your server
+2. Open the **Dashboard** and log in with Discord
+3. Select your server and go to the **Config** tab
+4. Paste your YAML config and save
+5. Use \`>setmodlogs #channel\` to set where mod actions are logged`,
+      },
+      {
+        id: "getting-started",
+        title: "Getting started",
+        type: "article",
+        content: `# Getting Started
 
-The web dashboard allows you to manage all settings visually without editing YAML directly. You can access the dashboard by logging in with Discord and selecting your server.
+## Step 1 — Invite the bot
 
-## Support
+Use the invite link on the home page to add NightPigeon to your server. Make sure to grant it the **Administrator** permission so it can enforce all protections.
 
-If you run into any issues, join the official Discord server for help.`,
+## Step 2 — Set your mod log channel
+
+\`\`\`
+>setmodlogs #mod-logs
+\`\`\`
+
+All automod actions, anti-nuke events, and security alerts will be posted there.
+
+## Step 3 — Configure server logs (optional)
+
+Open the dashboard → **Logging** tab to pick which events to log and where.
+
+## Step 4 — Set up anti-nuke
+
+\`\`\`
+>antinuke enable
+>antinuke action ban
+>antinuke threshold channeldelete 3
+>antinuke whitelist add @TrustedAdmin
+\`\`\`
+
+## Step 5 — Configure mute mode
+
+By default the bot uses **Discord Timeout**. To use a role-based mute instead:
+
+\`\`\`
+>muteconfig role create
+>muteconfig mode role
+\`\`\`
+
+## Step 6 — Define staff shortcuts (optional)
+
+\`\`\`
+>shortcut warn spam Spamming in chat
+>shortcut mute 1h toxic 1h Toxic behaviour
+>shortcut ban cheat Cheating / exploiting
+\`\`\`
+
+Staff can now run \`>spam @user\`, \`>toxic @user\`, and \`>cheat @user\` instantly.`,
       },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // CONFIGURATION
+  // ────────────────────────────────────────────────────────────────────────────
   {
     id: "configuration",
     title: "Configuration",
     pages: [
       {
-        id: "configuration-format",
-        title: "Configuration format",
+        id: "yaml-format",
+        title: "YAML format",
         type: "article",
-        content: `# Configuration Format
+        content: `# YAML Configuration Format
 
-NightPigeon uses **YAML** for its server configuration. Configuration is stored per-guild and can be edited in the Dashboard's Config tab.
+NightPigeon uses **YAML** for its per-server configuration. Edit it from the **Config** tab in the dashboard.
 
-## Basic Structure
+## Basic structure
 
 \`\`\`yaml
-# The command prefix used by the bot in this server
-prefix: "!"
+# Command prefix (default is >)
+prefix: ">"
 
-# Permission levels for users, roles, and commands
+# Permission levels
 levels:
   users:
-    "123456789012345678": 100   # User ID: level
+    "123456789012345678": 100   # User ID → level
   roles:
-    "111222333444555666": 50    # Role ID: level
+    "111222333444555666": 50    # Role ID → level
   commands:
     ban: 50
-    kick: 25
-    warn: 25
+    kick: 50
 
-# Plugin configurations
-plugins:
-  moderation:
-    enabled: true
-    mute_role: 111222333444555666
-    dm_on_action: true
+# Command aliases
+aliases:
+  b: ban
+  k: kick
+  m: mute
+
+# Preset shortcuts ("bam" and "warm" are built-in)
+presets:
+  bam:
+    type: ban
+    reason: "BAM — instant ban"
+  warm:
+    type: warn
+    reason: "WARM — instant warn"
 \`\`\`
 
-## Top-Level Keys
+## Top-level keys
 
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| \`prefix\` | string | \`!\` | The command prefix for this server |
-| \`levels\` | object | — | Permission level assignments |
-| \`plugins\` | object | — | Per-plugin configuration blocks |
+| Key | Type | Description |
+|-----|------|-------------|
+| \`prefix\` | string | Command prefix for this server (max 5 chars) |
+| \`levels\` | object | Permission level assignments (see Permissions) |
+| \`aliases\` | object | Short aliases for existing commands |
+| \`presets\` | object | Named punishment shortcuts |
 
-## YAML Tips
+## YAML tips
 
-- Use quotes around Discord IDs (they are large numbers and may lose precision)
-- Indentation must be consistent — use 2 spaces, not tabs
+- Always quote Discord IDs — they are large numbers and can lose precision
+- Use **2 spaces** for indentation, never tabs
 - Comments start with \`#\`
-- Boolean values: \`true\` / \`false\` (lowercase)
-- Use \`null\` or omit a key to use the default value`,
-      },
-      {
-        id: "plugin-configuration",
-        title: "Plugin configuration",
-        type: "article",
-        content: `# Plugin Configuration
-
-Each plugin has its own configuration block under the \`plugins:\` key.
-
-## Enabling a Plugin
-
-To enable a plugin with its default settings:
-
-\`\`\`yaml
-plugins:
-  moderation: {}
-\`\`\`
-
-To enable with custom settings:
-
-\`\`\`yaml
-plugins:
-  moderation:
-    enabled: true
-    mute_role: "111222333444555666"
-    dm_on_action: true
-\`\`\`
-
-## Plugin Config Keys
-
-Each plugin documentation page lists:
-- **Name in config** — the key to use under \`plugins:\`
-- **Default configuration** — what the plugin uses when no config is specified
-- **Config schema** — all available options with their types and descriptions
-
-## Example: Multiple Plugins
-
-\`\`\`yaml
-plugins:
-  moderation:
-    enabled: true
-    mute_role: "111222333444555666"
-
-  automod:
-    enabled: true
-    log_channel: "999888777666555444"
-
-  logs:
-    enabled: true
-    log_channel: "999888777666555444"
-    categories:
-      - message_delete
-      - member_join
-      - member_leave
-\`\`\``,
+- Booleans: \`true\` / \`false\` (lowercase)
+- Omit a key to use its default value`,
       },
       {
         id: "permissions",
         title: "Permissions",
         type: "article",
-        content: `# Permissions
+        content: `# Permission Levels
 
-NightPigeon uses a numeric permission level system. Higher numbers mean more permissions.
+NightPigeon uses a **numeric level system**. Higher numbers mean more access.
 
-## Level Scale
+## Standard levels
 
-| Level | Typical Role |
+| Level | Typical role |
 |-------|-------------|
 | 0 | Everyone (default) |
-| 25 | Trusted Member |
+| 25 | Trusted member |
 | 50 | Moderator |
 | 75 | Senior Moderator |
 | 100 | Administrator / Owner |
 
-## Assigning Levels
+## Assigning levels
 
-Levels can be assigned to individual users or Discord roles:
+Set levels in your YAML config:
 
 \`\`\`yaml
 levels:
   users:
-    "123456789012345678": 100   # Owner
-    "987654321098765432": 75    # Senior Mod
+    "123456789012345678": 100   # specific user → full admin
   roles:
-    "111222333444555666": 50    # Moderator role
-    "222333444555666777": 25    # Trusted role
+    "111222333444555666": 50    # your Mod role
+    "222333444555666777": 25    # your Helper role
 \`\`\`
 
-## Command Requirements
+## Per-command requirements
 
-Each command requires a minimum permission level:
+Override the level required to use any command:
 
 \`\`\`yaml
 levels:
   commands:
-    ban: 50
-    kick: 50
-    warn: 25
-    mute: 25
-    purge: 25
-    tag: 25
+    shortcut: 50
+    alias: 75
+    antinuke: 100
 \`\`\`
 
-## How Levels Are Resolved
+## Resolution order
 
-1. Check if the user has a direct user-level assignment
-2. Check all roles the user has, take the highest role level
+1. Direct user-level assignment (highest priority)
+2. Highest role-level among all the user's roles
 3. Server owner always gets level 100
-4. Bot owner gets level 100 in all servers
+4. Bot owner gets level 100 everywhere
 
-The highest applicable level is used.`,
+The highest applicable level is used.
+
+## Discord permission mapping
+
+Some commands bypass the YAML level system and require a specific Discord permission regardless:
+
+| Command | Discord permission required |
+|---------|----------------------------|
+| \`antinuke\`, \`antiraid\`, \`resetconfig\`, \`modrole\`, \`protectedrole\`, \`alias\`, \`backup\` | Administrator |
+| \`changeprefix\`, \`setmodlogs\`, \`setserverlogs\`, \`setautomodwarnexpiry\`, \`setexpiredate\`, \`automod\` | Manage Server |
+| \`muteconfig\` | Manage Roles |
+| \`shortcut\` | Moderate Members |`,
       },
-    ],
-  },
-  {
-    id: "reference",
-    title: "Reference",
-    pages: [
       {
-        id: "argument-types",
-        title: "Argument types",
+        id: "duration-format",
+        title: "Duration format",
         type: "article",
-        content: `# Argument Types
+        content: `# Duration Format
 
-Command arguments use specific types. This page documents all available argument types.
+Durations are used in mute shortcuts, warning expiry, and automod settings.
 
-## Basic Types
+## Format
 
-| Type | Example | Description |
-|------|---------|-------------|
-| \`string\` | \`hello world\` | Plain text |
-| \`number\` | \`42\` | Integer or decimal |
-| \`boolean\` | \`true\` / \`false\` | On/off value |
-| \`duration\` | \`1h30m\` | Time duration |
-
-## Duration Format
-
-Durations combine a number and a unit letter:
+A duration is a **number** followed by a **unit letter**:
 
 | Unit | Letter | Example |
 |------|--------|---------|
@@ -270,857 +267,1072 @@ Durations combine a number and a unit letter:
 | Minutes | \`m\` | \`5m\` |
 | Hours | \`h\` | \`2h\` |
 | Days | \`d\` | \`7d\` |
-| Weeks | \`w\` | \`2w\` |
 
-You can combine them: \`1d12h30m\`
+## Examples
 
-## Discord Types
+| Input | Meaning |
+|-------|---------|
+| \`30s\` | 30 seconds |
+| \`5m\` | 5 minutes |
+| \`1h\` | 1 hour |
+| \`12h\` | 12 hours |
+| \`1d\` | 1 day |
+| \`7d\` | 7 days |
+| \`30d\` | 30 days |
 
-| Type | Example | Description |
-|------|---------|-------------|
-| \`user\` | \`@User\` or \`123456789\` | A Discord user (mention or ID) |
-| \`role\` | \`@Role\` or ID | A Discord role (mention or ID) |
-| \`channel\` | \`#channel\` or ID | A Discord channel (mention or ID) |
-| \`message\` | Message ID or URL | A specific message |
+## Argument notation
 
-## Optional vs Required
-
-- **Required** arguments are shown without brackets: \`<user>\`
-- **Optional** arguments are shown with brackets: \`[reason]\`
-- **Rest** arguments capture everything remaining: \`<reason...>\``,
+- **\`<required>\`** — must be provided
+- **\`[optional]\`** — can be omitted
+- **\`<value...>\`** — captures everything remaining (e.g. reason text)`,
       },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // COMMANDS
+  // ────────────────────────────────────────────────────────────────────────────
   {
-    id: "setup-guides",
-    title: "Setup guides",
+    id: "commands",
+    title: "Commands",
     pages: [
       {
-        id: "setup-logs",
-        title: "Logs",
+        id: "commands-general",
+        title: "General",
         type: "article",
-        content: `# Setting Up Logs
+        commands: [
+          {
+            trigger: "help",
+            aliases: ["h", "commands"],
+            usage: ">help [command]",
+            description: "Show all available commands, or detailed help for a specific command. Also works for shortcuts and custom commands.",
+            permissions: "Everyone",
+            examples: [">help", ">help antinuke", ">help spam"],
+          },
+          {
+            trigger: "ping",
+            aliases: ["latency"],
+            usage: ">ping",
+            description: "Check the bot's roundtrip latency and WebSocket ping.",
+            permissions: "Everyone",
+            examples: [">ping"],
+          },
+          {
+            trigger: "dashboard",
+            aliases: ["dash", "panel"],
+            usage: ">dashboard",
+            description: "Get a direct link to the web dashboard for this server.",
+            permissions: "Everyone",
+            examples: [">dashboard"],
+          },
+        ],
+        content: `# General Commands
 
-Server logging lets you track events like message edits, deletions, member joins, and more.
-
-## Step 1: Create a Log Channel
-
-Create a dedicated text channel in your Discord server for logs (e.g., \`#server-logs\`). Copy the channel ID.
-
-## Step 2: Enable the Logs Plugin
-
-Add the following to your config:
-
-\`\`\`yaml
-plugins:
-  logs:
-    enabled: true
-    log_channel: "YOUR_CHANNEL_ID_HERE"
-    categories:
-      - message_delete
-      - message_edit
-      - member_join
-      - member_leave
-      - member_ban
-      - member_unban
-      - channel_create
-      - channel_delete
-      - role_create
-      - role_delete
-\`\`\`
-
-## Step 3: Choose Categories
-
-Pick from the available log categories:
-
-| Category | What it logs |
-|----------|-------------|
-| \`message_delete\` | Deleted messages |
-| \`message_edit\` | Edited messages (before/after) |
-| \`member_join\` | Member joins with account age |
-| \`member_leave\` | Member leaves / kicks |
-| \`member_ban\` | Bans |
-| \`member_unban\` | Unbans |
-| \`channel_create\` | New channels created |
-| \`channel_delete\` | Channels deleted |
-| \`role_create\` | New roles |
-| \`role_delete\` | Deleted roles |
-| \`voice_join\` | Voice channel joins |
-| \`voice_leave\` | Voice channel leaves |
-
-## Multiple Log Channels
-
-You can route different log types to separate channels by configuring multiple log channel overrides in the Logs plugin config.`,
+These commands are available to everyone in the server.`,
       },
       {
-        id: "setup-moderation",
-        title: "Moderation",
+        id: "commands-configuration",
+        title: "Configuration",
         type: "article",
-        content: `# Setting Up Moderation
+        commands: [
+          {
+            trigger: "changeprefix",
+            aliases: ["setprefix", "prefix"],
+            usage: ">changeprefix <new prefix>",
+            description: "Change the bot's command prefix for this server. Maximum 5 characters.",
+            permissions: "Manage Server",
+            examples: [">changeprefix !", ">changeprefix >>", ">prefix ."],
+          },
+          {
+            trigger: "setmodlogs",
+            aliases: ["setlogchannel", "setlogs", "logchannel"],
+            usage: ">setmodlogs <#channel>",
+            description: "Set the channel where moderation action logs are posted. Accepts a channel mention or ID.",
+            permissions: "Manage Server",
+            examples: [">setmodlogs #mod-logs", ">logchannel #bot-logs"],
+          },
+          {
+            trigger: "setserverlogs",
+            aliases: ["serverlogs", "serverlogchannel"],
+            usage: ">setserverlogs",
+            description: "Opens a dashboard link to configure server event logging (message edits, member joins, voice events, etc.).",
+            permissions: "Manage Server",
+            examples: [">setserverlogs"],
+          },
+          {
+            trigger: "setexpiredate",
+            aliases: ["setexpiry", "warnexpiry", "setwarnduration"],
+            usage: ">setexpiredate <duration | 0>",
+            description: "Set how long warnings last before they expire. Range: 1 day to 3 months. Use `0` or `none` for permanent (never expire). Run with no argument to see the current setting.",
+            permissions: "Manage Server",
+            examples: [
+              ">setexpiredate 7d",
+              ">setexpiredate 30d",
+              ">setexpiredate 3m",
+              ">setexpiredate 0",
+              ">setexpiredate none",
+            ],
+          },
+          {
+            trigger: "setautomodwarnexpiry",
+            aliases: ["automodwarnexpiry", "setamwarnexpiry"],
+            usage: ">setautomodwarnexpiry <duration | 0>",
+            description: "Set how long AutoMod-issued warnings last before they expire (separate from manual warnings). Range: 1 day to 1 month. Use `0` or `none` for permanent. Run with no argument to see the current setting.",
+            permissions: "Manage Server",
+            examples: [
+              ">setautomodwarnexpiry 1d",
+              ">setautomodwarnexpiry 7d",
+              ">setautomodwarnexpiry 0",
+            ],
+          },
+          {
+            trigger: "backup",
+            aliases: ["bk"],
+            usage: ">backup export | import",
+            description: "Export all server settings to a JSON file (sent to your DMs), or import a previously exported backup. Import requires you to attach the .json file and confirm. Works in DMs too — the backup's guildId is used to find the server.",
+            permissions: "Administrator",
+            examples: [">backup export", ">backup import (with .json file attached)"],
+          },
+          {
+            trigger: "resetconfig",
+            aliases: ["configreset", "resetbot", "factoryreset"],
+            usage: ">resetconfig",
+            description: "Reset ALL bot configuration for this server back to defaults. Shows a confirmation button before proceeding. Resets: prefix, mod log channel, server log channel, warn expiry, automod, anti-nuke, anti-raid, mod roles, shortcuts, and aliases. Does NOT affect infraction history.",
+            permissions: "Administrator",
+            examples: [">resetconfig"],
+          },
+        ],
+        content: `# Configuration Commands
 
-This guide walks you through setting up the full moderation system.
+Commands for setting up and managing the bot's configuration.
 
-## Step 1: Create a Mute Role
+## What the backup includes
 
-1. Create a role called \`Muted\` (or any name you prefer)
-2. For each channel you want muted users to be silent in, go to channel permissions and deny **Send Messages** for the Muted role
-3. Copy the role ID
+When you run \`>backup export\`, the bot sends you a JSON file containing:
 
-## Step 2: Configure the Moderation Plugin
+- Server settings (prefix, log channels, warn expiry)
+- Anti-Nuke configuration
+- Anti-Raid configuration
+- AutoMod configuration
+- Mod roles
+- Shortcuts
+- Aliases
 
-\`\`\`yaml
-levels:
-  roles:
-    "MOD_ROLE_ID": 50
-  commands:
-    ban: 50
-    kick: 50
-    warn: 25
-    mute: 25
-    unmute: 25
-
-plugins:
-  moderation:
-    enabled: true
-    mute_role: "MUTED_ROLE_ID"
-    dm_on_action: true
-    ban_delete_message_days: 1
-\`\`\`
-
-## Step 3: Set Up Mod Log
-
-\`\`\`yaml
-plugins:
-  logs:
-    enabled: true
-    log_channel: "MOD_LOG_CHANNEL_ID"
-    categories:
-      - member_ban
-      - member_unban
-      - member_kick
-\`\`\`
-
-## Available Commands
-
-| Command | Usage | Level |
-|---------|-------|-------|
-| Ban | \`!ban @user [duration] [reason]\` | 50 |
-| Kick | \`!kick @user [reason]\` | 50 |
-| Mute | \`!mute @user [duration] [reason]\` | 25 |
-| Warn | \`!warn @user <reason>\` | 25 |
-| Note | \`!note @user <text>\` | 25 |
-| Cases | \`!case <id>\` | 25 |`,
+You can restore this file on the same server or import it into a different server.`,
       },
       {
-        id: "setup-counters",
-        title: "Counters",
+        id: "commands-security",
+        title: "Security",
         type: "article",
-        content: `# Setting Up Counters
+        commands: [
+          {
+            trigger: "antinuke",
+            aliases: ["an", "nuke"],
+            usage: ">antinuke <subcommand> [...]",
+            description: "Configure the Anti-Nuke system. See the Anti-Nuke plugin page for full details on all subcommands.",
+            permissions: "Administrator",
+            examples: [
+              ">antinuke enable",
+              ">antinuke action ban",
+              ">antinuke threshold channeldelete 3",
+              ">antinuke window 10",
+              ">antinuke whitelist add @Admin",
+              ">antinuke whitelist remove @Admin",
+              ">antinuke whitelist list",
+              ">antinuke logchannel #security-log",
+              ">antinuke dmowner on",
+              ">antinuke watch roles on",
+              ">antinuke watch server on",
+              ">antinuke watch everyone on",
+              ">antinuke roleprotect revert on",
+              ">antinuke roleprotect punish on",
+              ">antinuke prune on",
+              ">antinuke vanity on",
+              ">antinuke serverrename on",
+              ">antinuke servericon on",
+              ">antinuke rolerename on",
+              ">antinuke channelrename on",
+              ">antinuke restore on",
+              ">antinuke recover channels",
+              ">antinuke recover roles",
+              ">antinuke disable",
+            ],
+          },
+          {
+            trigger: "antiraid",
+            aliases: ["ar", "raid"],
+            usage: ">antiraid",
+            description: "Opens a dashboard link to configure the Anti-Raid system. All Anti-Raid settings are managed through the dashboard.",
+            permissions: "Administrator",
+            examples: [">antiraid"],
+          },
+        ],
+        content: `# Security Commands
 
-Counters let you track custom statistics for your server and automate actions when thresholds are reached.
+NightPigeon has two independent security systems:
 
-## Basic Counter Setup
+## Anti-Nuke (\`>antinuke\`)
 
-\`\`\`yaml
-plugins:
-  counters:
-    enabled: true
-    counters:
-      spam_warnings:
-        initial_value: 0
-        triggers:
-          - condition: ">=3"
-            action: mute
-            duration: 1h
-            reason: "Too many spam warnings"
+Protects against mass destructive actions by compromised or rogue admins. Fully configurable from the command line.
+
+### Subcommands
+
+| Subcommand | Description |
+|-----------|-------------|
+| \`enable\` / \`disable\` | Turn Anti-Nuke on or off |
+| \`action <ban\|kick\|strip>\` | Action taken against the attacker |
+| \`threshold <type> <count>\` | How many events per window trigger the system |
+| \`window <seconds>\` | Detection window in seconds (1–120) |
+| \`whitelist add\|remove\|list [@user\|roleID]\` | Users/roles exempt from anti-nuke |
+| \`logchannel <#ch\|clear>\` | Where to post anti-nuke alerts |
+| \`dmowner <on\|off>\` | DM the server owner when triggered |
+| \`watch roles\|server\|everyone <on\|off>\` | Monitor role perm changes, server settings, @everyone |
+| \`roleprotect revert\|punish <on\|off>\` | Auto-revert and/or punish dangerous role edits |
+| \`prune <on\|off>\` | Protect against unauthorized member pruning |
+| \`vanity <on\|off>\` | Protect the server vanity URL |
+| \`serverrename <on\|off>\` | Protect the server name |
+| \`servericon <on\|off>\` | Protect the server icon |
+| \`rolerename <on\|off>\` | Protect against mass role renames |
+| \`channelrename <on\|off>\` | Protect against mass channel renames |
+| \`restore <on\|off>\` | Cache deleted channels/roles for recovery |
+| \`recover [channels\|roles]\` | Recreate recently deleted channels or roles |
+
+### Threshold types
+
+| Type | What it tracks |
+|------|---------------|
+| \`channeldelete\` | Channels deleted |
+| \`channelcreate\` | Channels created |
+| \`roledelete\` | Roles deleted |
+| \`rolecreate\` | Roles created |
+| \`ban\` | Members banned |
+| \`kick\` | Members kicked |
+| \`webhookcreate\` | Webhooks created |
+| \`webhookdelete\` | Webhooks deleted |
+| \`masstimeout\` | Members timed out |
+| \`channelrename\` | Channels renamed |
+| \`rolerename\` | Roles renamed |
+
+## Anti-Raid (\`>antiraid\`)
+
+Detects mass join events and suspicious accounts. Configured entirely through the dashboard — run \`>antiraid\` for a link.`,
+      },
+      {
+        id: "commands-automod",
+        title: "AutoMod",
+        type: "article",
+        commands: [
+          {
+            trigger: "automod",
+            aliases: ["am"],
+            usage: ">automod",
+            description: "Opens a dashboard link to configure AutoMod rules. All AutoMod settings are managed through the dashboard.",
+            permissions: "Manage Server",
+            examples: [">automod"],
+          },
+          {
+            trigger: "muteconfig",
+            aliases: ["mutesettings"],
+            usage: ">muteconfig [subcommand] [...]",
+            description: "Configure how mutes work — Discord Timeout (default) or a custom Mute Role. Run with no argument to see current settings.",
+            permissions: "Manage Roles",
+            examples: [
+              ">muteconfig",
+              ">muteconfig mode timeout",
+              ">muteconfig mode role",
+              ">muteconfig role create",
+              ">muteconfig role set @Muted",
+              ">muteconfig striproles on",
+              ">muteconfig striproles off",
+            ],
+          },
+        ],
+        content: `# AutoMod Commands
+
+## AutoMod dashboard (\`>automod\`)
+
+All AutoMod rules are configured in the dashboard. Run \`>automod\` for a direct link.
+
+AutoMod modules available in the dashboard:
+- **Word filter** — Block specific words or wildcard patterns
+- **Invite links** — Block Discord invite links
+- **Spam** — Detect rapid message sending
+- **Mention spam** — Detect mass user/role mentions
+- **Link spam** — Detect rapid link posting
+- **URL filter** — Whitelist or blacklist specific domains
+- **Wall text** — Block excessively long messages
+- **Duplicate messages** — Block copy-pasted floods
+- **Character flood** — Detect repeated characters or emoji spam
+- **File filter** — Block specific file extensions
+
+Each module has its own action (warn, delete, mute, kick, ban), affected/ignored roles, and affected/ignored channels.
+
+## Mute configuration (\`>muteconfig\`)
+
+Controls how \`mute\` actions work when triggered by AutoMod or shortcuts.
+
+### Subcommands
+
+| Subcommand | Description |
+|-----------|-------------|
+| *(none)* | Show current mute settings |
+| \`mode timeout\` | Use Discord's native Timeout (default) |
+| \`mode role\` | Use a dedicated Mute Role |
+| \`role create\` | Create a "Muted" role with channel deny overrides set automatically |
+| \`role set @role\` | Use an existing role as the mute role |
+| \`striproles on\|off\` | Strip all roles from the member when muted (role mode only) |
+
+### Notes
+
+- **Timeout mode** applies Discord's built-in timeout — works without any role setup
+- **Role mode** requires a mute role to be set first with \`>muteconfig role create\` or \`>muteconfig role set\`
+- \`striproles\` only works in role mode`,
+      },
+      {
+        id: "commands-permissions",
+        title: "Permissions & Roles",
+        type: "article",
+        commands: [
+          {
+            trigger: "modrole",
+            aliases: ["mr"],
+            usage: ">modrole <add|remove|list|clear> [@role]",
+            description: "Manage which roles can use moderation commands. Mod roles grant access to moderation features without needing Administrator.",
+            permissions: "Administrator",
+            examples: [
+              ">modrole add @Moderator",
+              ">modrole add 111222333444555666",
+              ">modrole remove @Moderator",
+              ">modrole list",
+              ">modrole clear",
+            ],
+          },
+          {
+            trigger: "protectedrole",
+            aliases: ["protrole"],
+            usage: ">protectedrole <add|remove|list> [@role]",
+            description: "Manage roles that are immune to punishments. Members with a protected role cannot be warned, muted, kicked, or banned by the bot.",
+            permissions: "Administrator",
+            examples: [
+              ">protectedrole add @Admin",
+              ">protectedrole add @Owner",
+              ">protectedrole remove @Admin",
+              ">protectedrole list",
+            ],
+          },
+        ],
+        content: `# Permissions & Role Commands
+
+## Mod Roles (\`>modrole\`)
+
+Mod roles let you grant moderation access without giving someone Discord Administrator. Any member with a configured mod role can use moderation-level commands.
+
+Up to 50 mod roles can be configured per server.
+
+## Protected Roles (\`>protectedrole\`)
+
+Protected roles make members immune to all bot punishments. Use this for your admin team so they can't accidentally be punished by automod or shortcuts.
+
+Members with a protected role cannot be:
+- Warned
+- Muted
+- Kicked
+- Banned`,
+      },
+      {
+        id: "commands-shortcuts",
+        title: "Shortcuts & Aliases",
+        type: "article",
+        commands: [
+          {
+            trigger: "shortcut",
+            aliases: ["sc"],
+            usage: ">shortcut <warn|mute|kick|ban|list|delete> [name] [duration] <reason>",
+            description: "Create named punishment shortcuts. Once created, staff can run `>name @user` to instantly apply the preset action, duration, and reason. Up to 50 shortcuts per server.",
+            permissions: "Moderate Members (to manage) — any moderator to use",
+            examples: [
+              ">shortcut warn spam Spamming in chat",
+              ">shortcut mute toxic 1h Toxic behaviour",
+              ">shortcut mute permatoxic Permanently toxic (role mode)",
+              ">shortcut kick advert Advertising other servers",
+              ">shortcut ban cheat Cheating / exploiting",
+              ">shortcut ban tempban 7d Temporary ban",
+              ">shortcut list",
+              ">shortcut delete toxic",
+              ">sc del spam",
+            ],
+          },
+          {
+            trigger: "alias",
+            aliases: [],
+            usage: ">alias <add|remove|list> [alias] [command]",
+            description: "Create custom short aliases for any built-in command. Aliases act as alternative trigger words. Up to 10 aliases per command.",
+            permissions: "Administrator",
+            examples: [
+              ">alias add b ban",
+              ">alias add k kick",
+              ">alias add an antinuke",
+              ">alias remove b",
+              ">alias list",
+            ],
+          },
+        ],
+        content: `# Shortcuts & Aliases
+
+## Shortcuts (\`>shortcut\`)
+
+Shortcuts let your staff apply a pre-configured punishment with a single command. Instead of typing \`>mute @user 1h Toxic behaviour\`, they can run \`>toxic @user\`.
+
+### Shortcut types
+
+| Type | Description |
+|------|-------------|
+| \`warn\` | Issue a warning |
+| \`mute\` | Mute (timeout or role) |
+| \`kick\` | Kick from server |
+| \`ban\` | Ban (permanent or timed) |
+
+### Duration rules
+
+- **Warn / Kick** — no duration needed
+- **Mute** — duration is optional (omit for permanent in role mode; required for timeout mode)
+- **Ban** — duration is optional (omit for permanent ban; max 30d for timed ban)
+
+### Limits
+
+- Maximum **50 shortcuts** per server
+- Shortcut names cannot clash with built-in command names
+- Shortcut names are case-insensitive
+
+### Example setup
+
+\`\`\`
+>shortcut warn spam       Spamming in chat
+>shortcut warn caps       Excessive caps
+>shortcut mute 1h toxic   1h Toxic behaviour
+>shortcut mute 24h flood  24h Flooding channels
+>shortcut kick advert     Advertising other servers
+>shortcut ban cheat       Cheating / exploiting
+>shortcut ban 7d tempban  Temporary ban (7 days)
 \`\`\`
 
-## Use Cases
+Staff now run \`>spam @user\`, \`>toxic @user\`, etc.
 
-- Track the number of warnings before auto-punishing
-- Monitor message counts for activity roles
-- Count infractions to escalate punishments
+---
 
-## Trigger Conditions
+## Aliases (\`>alias\`)
 
-| Condition | Example | Meaning |
-|-----------|---------|---------|
-| \`>=\` | \`>=5\` | Counter is at least 5 |
-| \`==\` | \`==10\` | Counter is exactly 10 |
-| \`>\` | \`>3\` | Counter is more than 3 |
+Aliases create alternative names for built-in commands. Unlike shortcuts (which apply a punishment), aliases just redirect to another command.
 
-## Modifying Counters
+### Example
 
-Counters can be modified by other plugins (automod, mod actions) or via the \`!counter\` command:
+\`>alias add b ban\` means \`>b @user reason\` is now identical to \`>ban @user reason\`.
 
-\`\`\`
-!counter add spam_warnings @user 1
-!counter set spam_warnings @user 0
-!counter get spam_warnings @user
-\`\`\``,
+### Limits
+
+- Each command can have a maximum of **10 aliases**
+- Aliases cannot overwrite existing built-in command names`,
       },
     ],
   },
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // PLUGINS
+  // ────────────────────────────────────────────────────────────────────────────
   {
     id: "plugins",
     title: "Plugins",
     pages: [
       {
-        id: "plugin-auto-delete",
-        title: "Auto-delete",
+        id: "plugin-antinuke",
+        title: "Anti-Nuke",
         type: "plugin",
-        configKey: "auto_delete",
-        defaultConfig: `auto_delete:
-  enabled: false
-  rules: []`,
+        configKey: "antinuke",
+        defaultConfig: `# Anti-Nuke is configured via bot commands, not YAML.
+# Use >antinuke enable to get started.
+#
+# Example command setup:
+#   >antinuke enable
+#   >antinuke action ban
+#   >antinuke threshold channeldelete 3
+#   >antinuke threshold roledelete 3
+#   >antinuke threshold ban 5
+#   >antinuke window 10
+#   >antinuke whitelist add @TrustedAdmin
+#   >antinuke logchannel #security-logs
+#   >antinuke dmowner on
+#   >antinuke restore on`,
         schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the auto-delete plugin" },
+          { key: "enabled", type: "boolean", default: "false", description: "Whether Anti-Nuke protection is active" },
+          { key: "action", type: "ban | kick | strip", default: "ban", description: "Action taken against the attacker. 'strip' removes all roles without banning." },
+          { key: "windowMs", type: "number (ms)", default: "10000", description: "Time window in milliseconds for threshold counting" },
+          { key: "dmOwner", type: "boolean", default: "false", description: "DM the server owner when Anti-Nuke triggers" },
+          { key: "watchRolePerms", type: "boolean", default: "false", description: "Watch for dangerous permission grants to any role" },
+          { key: "watchServerUpdate", type: "boolean", default: "false", description: "Watch for unauthorized server setting changes" },
+          { key: "watchEveryonePerms", type: "boolean", default: "false", description: "Watch for dangerous permissions being granted to @everyone" },
+          { key: "revertRolePerms", type: "boolean", default: "false", description: "Automatically revert dangerous role permission changes" },
+          { key: "punishRolePerms", type: "boolean", default: "false", description: "Punish the executor of dangerous role permission changes" },
+          { key: "restoreEnabled", type: "boolean", default: "false", description: "Cache deleted channels and roles for recovery via >antinuke recover" },
+          { key: "antiPruneEnabled", type: "boolean", default: "false", description: "Punish users who prune members without being whitelisted" },
+          { key: "antiVanityEnabled", type: "boolean", default: "false", description: "Protect the server vanity URL from being changed" },
+          { key: "antiServerRenameEnabled", type: "boolean", default: "false", description: "Block unauthorized server name changes" },
+          { key: "antiServerIconEnabled", type: "boolean", default: "false", description: "Block unauthorized server icon changes" },
+          { key: "antiRoleRenameEnabled", type: "boolean", default: "false", description: "Detect mass role renames" },
+          { key: "antiChannelRenameEnabled", type: "boolean", default: "false", description: "Detect mass channel renames" },
           {
-            key: "rules", type: "array", default: "[]", description: "List of auto-delete rules",
+            key: "thresholds", type: "object", description: "Per-action thresholds that trigger Anti-Nuke",
             children: [
-              { key: "channel", type: "string", description: "Channel ID to apply the rule to" },
-              { key: "delay", type: "duration", default: "30s", description: "How long after posting to delete the message" },
-              { key: "match_bots", type: "boolean", default: "false", description: "Also delete bot messages" },
+              { key: "channelDelete", type: "number", default: "3", description: "Channel deletions before triggering" },
+              { key: "channelCreate", type: "number", default: "5", description: "Channel creations before triggering" },
+              { key: "roleDelete", type: "number", default: "3", description: "Role deletions before triggering" },
+              { key: "roleCreate", type: "number", default: "5", description: "Role creations before triggering" },
+              { key: "ban", type: "number", default: "5", description: "Bans before triggering" },
+              { key: "kick", type: "number", default: "5", description: "Kicks before triggering" },
+              { key: "webhookCreate", type: "number", default: "3", description: "Webhook creations before triggering" },
+              { key: "webhookDelete", type: "number", default: "3", description: "Webhook deletions before triggering" },
+              { key: "massTimeout", type: "number", default: "5", description: "Timeouts issued before triggering" },
+              { key: "channelRename", type: "number", default: "5", description: "Channel renames before triggering" },
+              { key: "roleRename", type: "number", default: "5", description: "Role renames before triggering" },
             ],
           },
         ],
         commands: [
-          { trigger: "!autodelete", usage: "!autodelete [channel] [delay]", description: "Temporarily enable auto-delete in a channel", permissions: "50" },
+          { trigger: "antinuke", aliases: ["an", "nuke"], usage: ">antinuke enable", description: "Enable Anti-Nuke protection", permissions: "Administrator" },
+          { trigger: "antinuke", aliases: ["an", "nuke"], usage: ">antinuke action <ban|kick|strip>", description: "Set what happens to attackers", permissions: "Administrator" },
+          { trigger: "antinuke", aliases: ["an", "nuke"], usage: ">antinuke threshold <type> <count>", description: "Set per-event trigger thresholds", permissions: "Administrator" },
+          { trigger: "antinuke", aliases: ["an", "nuke"], usage: ">antinuke whitelist add|remove|list [@user|roleID]", description: "Manage whitelisted users/roles", permissions: "Administrator" },
+          { trigger: "antinuke", aliases: ["an", "nuke"], usage: ">antinuke recover [channels|roles]", description: "Recreate recently deleted channels or roles", permissions: "Administrator" },
         ],
-        content: `The **Auto-delete** plugin automatically deletes messages in specified channels after a configurable delay.
+        content: `The **Anti-Nuke** plugin monitors your server in real time for signs of a malicious admin or compromised account attempting to destroy the server.
 
-## Use Cases
+## How it works
 
-- Keep \`#bot-commands\` channels clean by deleting responses after 30 seconds
-- Auto-clean \`#verification\` channels
-- Remove bot output in announcement channels`,
+Every destructive Discord action (channel delete, role delete, ban, webhook creation, etc.) is counted per-user within a sliding time window. If a user hits a threshold, they are immediately punished and the action is logged.
+
+## Actions
+
+| Action | Effect |
+|--------|--------|
+| \`ban\` | The attacker is permanently banned |
+| \`kick\` | The attacker is kicked |
+| \`strip\` | All roles are removed from the attacker |
+
+## Whitelist
+
+Always whitelist your most trusted admins so they aren't accidentally triggered. Add them with:
+
+\`\`\`
+>antinuke whitelist add @TrustedAdmin
+\`\`\`
+
+You can also whitelist entire roles:
+
+\`\`\`
+>antinuke whitelist add @ServerOwner
+\`\`\`
+
+## Role permission protection
+
+When \`watch roles\` is on, the bot monitors any role that gets dangerous permissions added (Administrator, Manage Guild, Ban Members, etc.).
+
+- **revert on** → The change is automatically undone
+- **punish on** → The user who made the change is actioned
+
+## Channel & Role recovery
+
+When \`restore on\` is enabled, deleted channels and roles are cached in memory. If a nuke happens, run:
+
+\`\`\`
+>antinuke recover channels
+>antinuke recover roles
+\`\`\`
+
+to recreate them. The cache expires on bot restart.
+
+## Recommended starting config
+
+\`\`\`
+>antinuke enable
+>antinuke action ban
+>antinuke threshold channeldelete 3
+>antinuke threshold roledelete 3
+>antinuke threshold ban 5
+>antinuke threshold kick 5
+>antinuke threshold webhookcreate 3
+>antinuke window 10
+>antinuke logchannel #security-logs
+>antinuke dmowner on
+>antinuke restore on
+>antinuke whitelist add @YourMainAdmin
+\`\`\``,
       },
       {
-        id: "plugin-auto-reactions",
-        title: "Auto-reactions",
+        id: "plugin-antiraid",
+        title: "Anti-Raid",
         type: "plugin",
-        configKey: "auto_reactions",
-        defaultConfig: `auto_reactions:
-  enabled: false
-  triggers: []`,
+        configKey: "antiraid",
+        defaultConfig: `# Anti-Raid is configured through the Dashboard.
+# Run >antiraid for a direct link.`,
         schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the auto-reactions plugin" },
-          {
-            key: "triggers", type: "array", default: "[]", description: "List of auto-reaction triggers",
-            children: [
-              { key: "channel", type: "string", description: "Channel ID to apply reactions to" },
-              { key: "emojis", type: "string[]", description: "List of emoji to add (unicode or custom ID)" },
-              { key: "match_bots", type: "boolean", default: "false", description: "Also react to bot messages" },
-            ],
-          },
+          { key: "enabled", type: "boolean", default: "false", description: "Whether Anti-Raid is active" },
+          { key: "joinThreshold", type: "number", default: "10", description: "Number of joins within the window to trigger a raid alert" },
+          { key: "joinWindowMs", type: "number (ms)", default: "10000", description: "Time window for counting joins (milliseconds)" },
+          { key: "joinScope", type: "all | suspicious", default: "all", description: "Whether all joins or only suspicious joins count toward the threshold" },
+          { key: "actionLevel", type: "1 | 2 | 3 | 4", default: "1", description: "What the bot does when a raid is detected (see Action Levels)" },
+          { key: "newAccountEnabled", type: "boolean", default: "false", description: "Flag/action accounts newer than newAccountAgeDays" },
+          { key: "newAccountAgeDays", type: "number", default: "7", description: "Account age in days to be considered 'new'" },
+          { key: "newAccountAction", type: "flag | timeout | kick | ban", default: "flag", description: "Action for new accounts on join" },
+          { key: "noAvatarEnabled", type: "boolean", default: "false", description: "Flag/action accounts with no profile picture" },
+          { key: "noAvatarAction", type: "flag | timeout | kick | ban", default: "flag", description: "Action for no-avatar accounts" },
+          { key: "defaultUsernameEnabled", type: "boolean", default: "false", description: "Flag/action Discord auto-generated usernames" },
+          { key: "defaultUsernameAction", type: "flag | timeout | kick | ban", default: "flag", description: "Action for default username accounts" },
+          { key: "usernameFilterEnabled", type: "boolean", default: "false", description: "Enable the custom username pattern filter" },
+          { key: "usernameFilterPatterns", type: "string[]", default: "[]", description: "Substrings/patterns that trigger the username filter" },
+          { key: "usernameFilterAction", type: "flag | timeout | kick | ban", default: "flag", description: "Action for matched usernames" },
+          { key: "suspiciousEnabled", type: "boolean", default: "false", description: "Action accounts that accumulate multiple suspicious signals" },
+          { key: "suspiciousThreshold", type: "number", default: "2", description: "How many signals required to be 'suspicious' (1–4)" },
+          { key: "suspiciousAction", type: "flag | timeout | kick | ban", default: "flag", description: "Action for suspicious accounts" },
+          { key: "botGuardEnabled", type: "boolean", default: "false", description: "Only whitelisted users may add bots" },
+          { key: "botGuardRemoveBot", type: "boolean", default: "true", description: "Kick the unauthorized bot itself" },
+          { key: "botGuardPunishAdder", type: "boolean", default: "true", description: "Punish the user who added the unauthorized bot" },
+          { key: "botGuardAdderAction", type: "flag | kick | ban | strip", default: "kick", description: "Action taken against the unauthorized adder" },
         ],
-        content: `The **Auto-reactions** plugin automatically adds emoji reactions to messages in specified channels.
+        commands: [
+          { trigger: "antiraid", aliases: ["ar", "raid"], usage: ">antiraid", description: "Get a dashboard link to configure Anti-Raid", permissions: "Administrator" },
+        ],
+        content: `The **Anti-Raid** plugin protects your server from coordinated mass-join attacks and suspicious account types.
 
-## Use Cases
+## Action levels
 
-- Add upvote/downvote reactions to \`#suggestions\`
-- React with a ✅ to \`#rules-accepted\` messages
-- Add fun reactions to \`#memes\``,
+| Level | What happens |
+|-------|-------------|
+| 1 | Alert only — logs the event and DMs the owner |
+| 2 | Timeout all raid joiners for 1 hour |
+| 3 | Kick all raid joiners |
+| 4 | Ban all raid joiners + enable server lockdown |
+
+## Suspicious signals
+
+The bot tracks four signals for each joining account:
+
+1. Account is newer than the configured age threshold
+2. Account has no profile picture
+3. Account has a Discord auto-generated username
+4. Account's username matches a custom filter pattern
+
+When \`suspiciousEnabled\` is on, accounts that accumulate enough signals are automatically actioned.
+
+## Bot Guard
+
+When enabled, only users on the Anti-Raid **whitelist** may add bots to the server. Anyone else who adds a bot will:
+1. Have their bot kicked (if \`botGuardRemoveBot\` is on)
+2. Be actioned themselves (if \`botGuardPunishAdder\` is on)
+
+Specific bots can be permanently allowed regardless via the dashboard.
+
+## Configuration
+
+All Anti-Raid settings are managed through the dashboard. Run \`>antiraid\` in chat for a direct link to your server's Anti-Raid settings.`,
       },
       {
         id: "plugin-automod",
-        title: "Automod",
+        title: "AutoMod",
         type: "plugin",
         configKey: "automod",
-        defaultConfig: `automod:
-  enabled: false
-  log_channel: null
-  rules: []`,
+        defaultConfig: `# AutoMod is configured through the Dashboard.
+# Run >automod for a direct link.`,
         schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the automod plugin" },
-          { key: "log_channel", type: "string | null", default: "null", description: "Channel ID to log automod actions" },
+          { key: "exemptRoles", type: "string[]", default: "[]", description: "Role IDs that are fully exempt from all AutoMod rules" },
+          { key: "exemptChannels", type: "string[]", default: "[]", description: "Channel IDs that are fully exempt from all AutoMod rules" },
+          { key: "silent", type: "boolean", default: "false", description: "If true, AutoMod acts silently without posting public notices" },
           {
-            key: "rules", type: "array", default: "[]", description: "List of automod rules",
+            key: "filter", type: "object", description: "Word filter module",
             children: [
-              { key: "name", type: "string", description: "Friendly name for the rule" },
-              { key: "triggers", type: "object[]", description: "What triggers this rule (word_list, spam, invite_links, etc.)" },
-              { key: "actions", type: "object[]", description: "What to do when triggered (delete, warn, mute, ban, etc.)" },
-              { key: "ignore_roles", type: "string[]", default: "[]", description: "Roles to exempt from this rule" },
-              { key: "ignore_channels", type: "string[]", default: "[]", description: "Channels to exempt from this rule" },
+              { key: "enabled", type: "boolean", default: "false", description: "Enable the word filter" },
+              { key: "words", type: "string[]", default: "[]", description: "Exact words to block" },
+              { key: "wildcardWords", type: "string[]", default: "[]", description: "Wildcard patterns — use * as a wildcard (e.g. bad*word)" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "inviteLinks", type: "object", description: "Discord invite link filter",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Block Discord invite links" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "spam", type: "object", description: "Message spam detection",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable spam detection" },
+              { key: "limit", type: "number", default: "5", description: "Number of messages in the window that triggers the rule" },
+              { key: "windowMs", type: "number (ms)", default: "5000", description: "Window size in milliseconds" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "mute", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "mentionSpam", type: "object", description: "Mass mention detection",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable mention spam detection" },
+              { key: "threshold", type: "number", default: "5", description: "Number of mentions in a single message to trigger" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "mute", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "wallText", type: "object", description: "Wall-of-text detection",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable wall-text detection" },
+              { key: "maxLength", type: "number", default: "1000", description: "Max message character length" },
+              { key: "maxLines", type: "number", default: "15", description: "Max number of lines in a message" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "linkSpam", type: "object", description: "Link spam detection",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable link spam detection" },
+              { key: "limit", type: "number", default: "3", description: "Links per window to trigger" },
+              { key: "windowMs", type: "number (ms)", default: "10000", description: "Window size in milliseconds" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "urlFilter", type: "object", description: "URL domain filter",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable URL filtering" },
+              { key: "mode", type: "blacklist | whitelist", default: "blacklist", description: "Block listed domains (blacklist) or only allow listed domains (whitelist)" },
+              { key: "blockAll", type: "boolean", default: "false", description: "Block all URLs regardless of domain (whitelist mode only)" },
+              { key: "domains", type: "string[]", default: "[]", description: "List of domains to block or allow" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "duplicate", type: "object", description: "Duplicate message detection",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable duplicate detection" },
+              { key: "count", type: "number", default: "3", description: "How many identical messages trigger the rule" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "charFlood", type: "object", description: "Character/emoji flood detection",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable character flood detection" },
+              { key: "maxRepeat", type: "number", default: "10", description: "Max consecutive identical characters allowed" },
+              { key: "maxEmoji", type: "number", default: "10", description: "Max emojis per message" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "fileFilter", type: "object", description: "File attachment filter",
+            children: [
+              { key: "enabled", type: "boolean", default: "false", description: "Enable file filter" },
+              { key: "blockedExtensions", type: "string[]", default: "[]", description: "File extensions to block (e.g. exe, zip, bat)" },
+              { key: "action", type: "warn | delete | mute | kick | ban", default: "delete", description: "Action when triggered" },
+            ],
+          },
+          {
+            key: "punishmentSteps", type: "array", description: "Warn escalation — automatic escalation after X automod warns",
+            children: [
+              { key: "strikes", type: "number", description: "Number of automod warns that triggers this step" },
+              { key: "action", type: "warn | mute | kick | ban", description: "Action to apply at this strike count" },
+              { key: "duration", type: "duration string", description: "Duration for mute/ban actions (e.g. 1h, 7d)" },
             ],
           },
         ],
-        commands: [],
-        content: `The **Automod** plugin provides automated moderation rules that detect and act on rule-breaking content without requiring manual moderator intervention.
+        commands: [
+          { trigger: "automod", aliases: ["am"], usage: ">automod", description: "Get a dashboard link to configure AutoMod", permissions: "Manage Server" },
+          { trigger: "setautomodwarnexpiry", aliases: ["automodwarnexpiry", "setamwarnexpiry"], usage: ">setautomodwarnexpiry <duration | 0>", description: "Set how long AutoMod warnings last (1d–1m, or 0 for permanent)", permissions: "Manage Server", examples: [">setautomodwarnexpiry 7d", ">setautomodwarnexpiry 0"] },
+          { trigger: "setexpiredate", aliases: ["setexpiry", "warnexpiry", "setwarnduration"], usage: ">setexpiredate <duration | 0>", description: "Set how long manual warnings last (1d–3m, or 0 for permanent)", permissions: "Manage Server", examples: [">setexpiredate 30d", ">setexpiredate none"] },
+        ],
+        content: `The **AutoMod** plugin provides automatic message moderation without requiring moderator intervention.
 
-## Trigger Types
+## How AutoMod works
 
-| Trigger | Description |
-|---------|-------------|
-| \`word_list\` | Matches messages containing specified words or phrases |
-| \`invite_links\` | Detects Discord invite links |
-| \`spam\` | Detects rapid message sending |
-| \`mention_spam\` | Detects mass-mentions |
-| \`attachments\` | Flags messages with attachments |
-| \`links\` | Detects any URLs |
+1. Every message is checked against all enabled AutoMod modules
+2. If a module triggers, the message is deleted and the configured action is taken
+3. For \`warn\` actions, the bot tracks a per-user strike count
+4. When a user hits enough strikes, punishment escalation kicks in (if configured)
 
-## Action Types
+## Module actions
 
 | Action | Description |
 |--------|-------------|
-| \`delete\` | Delete the offending message |
-| \`warn\` | Add a warning to the user's case history |
-| \`mute\` | Mute the user for a duration |
-| \`ban\` | Ban the user |
-| \`log\` | Log the detection without punishing |`,
+| \`warn\` | Add to the user's automod strike count (triggers escalation) |
+| \`delete\` | Delete the message only |
+| \`mute\` | Delete + mute the user |
+| \`kick\` | Delete + kick the user |
+| \`ban\` | Delete + ban the user |
+
+## Warn escalation
+
+Set up automatic escalation in the dashboard. Example: after 3 automod warns → mute 1h, after 5 warns → kick, after 7 warns → ban.
+
+## Per-module overrides
+
+Each module can have its own:
+- **Affected roles** — only apply the rule to these roles
+- **Ignored roles** — never apply to these roles
+- **Affected channels** — only apply in these channels
+- **Ignored channels** — never apply in these channels
+
+## Silent mode
+
+When \`silent\` is enabled, AutoMod acts without posting any public notice in the channel. Actions are still logged to the mod log channel.`,
       },
       {
-        id: "plugin-cases",
-        title: "Cases",
+        id: "plugin-server-logs",
+        title: "Server Logs",
         type: "plugin",
-        configKey: "cases",
-        defaultConfig: `cases:
-  enabled: true
-  log_channel: null`,
+        configKey: "serverlogging",
+        defaultConfig: `# Server Logs are configured through the Dashboard.
+# Run >setserverlogs for a direct link.`,
         schema: [
-          { key: "enabled", type: "boolean", default: "true", description: "Enable the cases plugin" },
-          { key: "log_channel", type: "string | null", default: "null", description: "Channel to post case logs to" },
+          { key: "enabled", type: "boolean", default: "false", description: "Enable server event logging" },
+          { key: "channelId", type: "string | null", default: "null", description: "Channel ID where log events are posted" },
+          {
+            key: "categories", type: "object", description: "Per-category enable/disable and optional channel overrides",
+            children: [
+              { key: "messageDelete", type: "boolean", default: "false", description: "Log deleted messages" },
+              { key: "messageEdit", type: "boolean", default: "false", description: "Log edited messages (before/after)" },
+              { key: "memberJoin", type: "boolean", default: "false", description: "Log member joins with account age" },
+              { key: "memberLeave", type: "boolean", default: "false", description: "Log member leaves" },
+              { key: "memberBan", type: "boolean", default: "false", description: "Log bans" },
+              { key: "memberUnban", type: "boolean", default: "false", description: "Log unbans" },
+              { key: "memberKick", type: "boolean", default: "false", description: "Log kicks" },
+              { key: "memberNickname", type: "boolean", default: "false", description: "Log nickname changes" },
+              { key: "memberRoles", type: "boolean", default: "false", description: "Log role additions/removals" },
+              { key: "channelCreate", type: "boolean", default: "false", description: "Log channel creations" },
+              { key: "channelDelete", type: "boolean", default: "false", description: "Log channel deletions" },
+              { key: "channelUpdate", type: "boolean", default: "false", description: "Log channel updates (name, topic, etc.)" },
+              { key: "roleCreate", type: "boolean", default: "false", description: "Log role creations" },
+              { key: "roleDelete", type: "boolean", default: "false", description: "Log role deletions" },
+              { key: "roleUpdate", type: "boolean", default: "false", description: "Log role updates (name, perms, color)" },
+              { key: "voiceJoin", type: "boolean", default: "false", description: "Log voice channel joins" },
+              { key: "voiceLeave", type: "boolean", default: "false", description: "Log voice channel leaves" },
+              { key: "voiceMove", type: "boolean", default: "false", description: "Log voice channel switches" },
+            ],
+          },
         ],
         commands: [
-          { trigger: "!case", aliases: ["!c"], usage: "!case <id>", description: "View details of a specific moderation case", permissions: "25", examples: ["!case 42"] },
-          { trigger: "!cases", usage: "!cases @user", description: "View all cases for a user", permissions: "25", examples: ["!cases @User"] },
-          { trigger: "!deletecase", usage: "!deletecase <id>", description: "Delete a moderation case", permissions: "75" },
-          { trigger: "!editcase", usage: "!editcase <id> <new reason>", description: "Edit the reason for a case", permissions: "50" },
-          { trigger: "!note", usage: "!note @user <text>", description: "Add a staff note to a user's record (not shown to user)", permissions: "25" },
+          { trigger: "setserverlogs", aliases: ["serverlogs", "serverlogchannel"], usage: ">setserverlogs", description: "Get a dashboard link to configure server event logging", permissions: "Manage Server" },
+          { trigger: "setmodlogs", aliases: ["setlogchannel", "setlogs", "logchannel"], usage: ">setmodlogs <#channel>", description: "Set the channel for mod action logs (Anti-Nuke, AutoMod, etc.)", permissions: "Manage Server" },
         ],
-        content: `The **Cases** plugin tracks all moderation actions as numbered cases. Every ban, kick, mute, and warn creates a case entry.
+        content: `The **Server Logs** plugin tracks Discord events and posts them to a log channel.
 
-## Case Types
+## Two types of logs
 
-| Type | Description |
-|------|-------------|
-| \`ban\` | User was banned |
-| \`unban\` | User was unbanned |
-| \`kick\` | User was kicked |
-| \`mute\` | User was muted |
-| \`unmute\` | User was unmuted |
-| \`warn\` | User received a warning |
-| \`note\` | Staff note (not shown to user) |
+NightPigeon has two separate logging systems:
 
-## Viewing Cases
+### Mod log channel (\`>setmodlogs\`)
+Used for bot-generated events:
+- AutoMod deletions and punishments
+- Anti-Nuke triggers
+- Anti-Raid events
 
-Use \`!cases @user\` to see a numbered list of all infractions. Each case shows the type, reason, moderator, and timestamp.`,
+### Server log channel (Dashboard)
+Used for Discord events:
+- Message edits and deletes
+- Member joins/leaves/bans
+- Nickname and role changes
+- Channel and role creation/deletion
+- Voice channel activity
+
+## Configuration
+
+Server log settings are managed through the dashboard. Run \`>setserverlogs\` for a direct link.
+
+You can:
+- Pick a single channel for all events
+- Enable/disable individual event categories
+- Route different categories to different channels`,
       },
       {
-        id: "plugin-command-aliases",
+        id: "plugin-mute-config",
+        title: "Mute Configuration",
+        type: "plugin",
+        configKey: "muteConfig",
+        defaultConfig: `# Mute is configured via bot commands.
+#
+#   >muteconfig                  — show current settings
+#   >muteconfig mode timeout     — use Discord Timeout (default)
+#   >muteconfig mode role        — use a Mute Role
+#   >muteconfig role create      — auto-create the Muted role
+#   >muteconfig role set @Muted  — use an existing role
+#   >muteconfig striproles on    — strip all roles on mute`,
+        schema: [
+          { key: "mode", type: "timeout | role", default: "timeout", description: "How mutes are applied — Discord Timeout or a dedicated Mute Role" },
+          { key: "muteRoleId", type: "string | null", default: "null", description: "Role ID to use as the mute role (only used when mode is 'role')" },
+          { key: "stripRoles", type: "boolean", default: "false", description: "When true, all roles are removed from the member on mute and restored on unmute (role mode only)" },
+        ],
+        commands: [
+          { trigger: "muteconfig", aliases: ["mutesettings"], usage: ">muteconfig", description: "Show current mute configuration", permissions: "Manage Roles" },
+          { trigger: "muteconfig", aliases: ["mutesettings"], usage: ">muteconfig mode timeout", description: "Use Discord's native Timeout (default)", permissions: "Manage Roles" },
+          { trigger: "muteconfig", aliases: ["mutesettings"], usage: ">muteconfig mode role", description: "Switch to role-based muting", permissions: "Manage Roles" },
+          { trigger: "muteconfig", aliases: ["mutesettings"], usage: ">muteconfig role create", description: "Create a 'Muted' role with channel deny overrides automatically applied", permissions: "Manage Roles + Manage Channels" },
+          { trigger: "muteconfig", aliases: ["mutesettings"], usage: ">muteconfig role set @role", description: "Set an existing role as the mute role", permissions: "Manage Roles" },
+          { trigger: "muteconfig", aliases: ["mutesettings"], usage: ">muteconfig striproles on|off", description: "Toggle role stripping on mute (role mode only)", permissions: "Manage Roles" },
+        ],
+        content: `The **Mute Configuration** plugin controls how mutes are applied across the server.
+
+## Modes
+
+### Discord Timeout (default)
+
+Uses Discord's built-in timeout feature. No role setup required.
+
+- Works out of the box
+- Muted users cannot send messages, react, or join voice channels
+- Max timeout duration is 28 days
+
+### Mute Role
+
+Uses a dedicated role with channel permission overrides.
+
+- More flexible — you control exactly what muted users can see
+- Allows permanent mutes
+- Supports role stripping (removes all other roles for the duration)
+
+## Setting up role mode
+
+### Option A — Auto-create
+
+\`\`\`
+>muteconfig role create
+>muteconfig mode role
+\`\`\`
+
+The bot creates a "Muted" role and automatically applies deny overrides for **Send Messages**, **Add Reactions**, **Speak**, and **Connect** across all channels.
+
+### Option B — Use existing role
+
+\`\`\`
+>muteconfig role set @YourMutedRole
+>muteconfig mode role
+\`\`\`
+
+## Strip roles
+
+When striproles is on, the bot removes ALL of the member's roles when muting them (and stores them for restoration on unmute). This prevents muted users from bypassing the mute with higher-permission roles.
+
+Only works in role mode.`,
+      },
+      {
+        id: "plugin-shortcuts",
+        title: "Shortcuts",
+        type: "plugin",
+        configKey: "shortcuts",
+        defaultConfig: `# Shortcuts are configured via bot commands.
+#
+#   >shortcut warn  spam    Spamming in chat
+#   >shortcut mute  1h      toxic    1h Toxic behaviour
+#   >shortcut kick  advert  Advertising
+#   >shortcut ban   cheat   Cheating / exploiting
+#   >shortcut list
+#   >shortcut delete spam`,
+        schema: [
+          { key: "name", type: "string", description: "The shortcut trigger word — becomes a command in your server" },
+          { key: "type", type: "warn | mute | kick | ban", description: "The punishment type this shortcut applies" },
+          { key: "reason", type: "string", description: "The reason automatically attached to the punishment" },
+          { key: "duration", type: "duration string", description: "Duration for mute/ban shortcuts (optional — omit for permanent)" },
+        ],
+        commands: [
+          { trigger: "shortcut", aliases: ["sc"], usage: ">shortcut warn <name> <reason>", description: "Create a warn shortcut", permissions: "Moderate Members", examples: [">shortcut warn spam Spamming in chat"] },
+          { trigger: "shortcut", aliases: ["sc"], usage: ">shortcut mute <name> [duration] <reason>", description: "Create a mute shortcut", permissions: "Moderate Members", examples: [">shortcut mute toxic 1h Toxic behaviour"] },
+          { trigger: "shortcut", aliases: ["sc"], usage: ">shortcut kick <name> <reason>", description: "Create a kick shortcut", permissions: "Moderate Members", examples: [">shortcut kick advert Advertising"] },
+          { trigger: "shortcut", aliases: ["sc"], usage: ">shortcut ban <name> [duration] <reason>", description: "Create a ban shortcut", permissions: "Moderate Members", examples: [">shortcut ban cheat Cheating", ">shortcut ban 7d tempban Temporary ban"] },
+          { trigger: "shortcut", aliases: ["sc"], usage: ">shortcut list", description: "List all shortcuts for this server", permissions: "Moderate Members" },
+          { trigger: "shortcut", aliases: ["sc"], usage: ">shortcut delete <name>", description: "Delete a shortcut", permissions: "Moderate Members" },
+        ],
+        content: `The **Shortcuts** plugin lets you define one-word punishment commands for your staff.
+
+## How shortcuts work
+
+Once created, a shortcut becomes a real command in your server. For example:
+
+\`\`\`
+>shortcut mute toxic 1h Toxic behaviour
+\`\`\`
+
+Staff can now run:
+\`\`\`
+>toxic @User
+\`\`\`
+
+This instantly mutes the user for 1 hour with the reason "Toxic behaviour". No typing out the full command.
+
+## Limits
+
+- Maximum **50 shortcuts** per server
+- Shortcut names are case-insensitive
+- Names cannot clash with built-in command names
+
+## Example shortcut set
+
+\`\`\`
+>shortcut warn spam       Spamming in chat
+>shortcut warn caps       Excessive caps
+>shortcut warn off-topic  Off-topic posting
+>shortcut mute  1h  toxic      1h Toxic behaviour
+>shortcut mute  24h flood      24h Flooding channels
+>shortcut mute  7d  repeat     7d Repeated violations
+>shortcut kick  advert    Advertising other servers
+>shortcut kick  nsfw-pf   NSFW profile picture
+>shortcut ban   cheat     Cheating / exploiting
+>shortcut ban   slur      Slurs / hate speech
+>shortcut ban   7d tempban  Temporary ban
+\`\`\`
+
+Staff run: \`>spam @user\`, \`>toxic @user\`, \`>cheat @user\`, etc.`,
+      },
+      {
+        id: "plugin-aliases",
         title: "Command Aliases",
         type: "plugin",
-        configKey: "command_aliases",
-        defaultConfig: `command_aliases:
-  enabled: false
-  aliases: []`,
+        configKey: "aliases",
+        defaultConfig: `# Aliases are configured via bot commands.
+#
+#   >alias add b   ban
+#   >alias add k   kick
+#   >alias add an  antinuke
+#   >alias list
+#   >alias remove b`,
         schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable command aliases" },
-          {
-            key: "aliases", type: "array", default: "[]", description: "List of alias definitions",
-            children: [
-              { key: "match", type: "string", description: "The alias trigger (e.g. !b)" },
-              { key: "expand_to", type: "string", description: "The command it expands to (e.g. !ban)" },
-            ],
-          },
+          { key: "alias", type: "string", description: "The alias trigger — the short name you type" },
+          { key: "command", type: "string", description: "The built-in command name this alias maps to" },
         ],
-        content: `The **Command Aliases** plugin lets you create shorthand aliases for any bot command.
+        commands: [
+          { trigger: "alias", aliases: [], usage: ">alias add <alias> <command>", description: "Create an alias for a command", permissions: "Administrator", examples: [">alias add b ban", ">alias add k kick"] },
+          { trigger: "alias", aliases: [], usage: ">alias remove <alias>", description: "Remove an alias", permissions: "Administrator", examples: [">alias remove b"] },
+          { trigger: "alias", aliases: [], usage: ">alias list", description: "List all configured aliases", permissions: "Administrator" },
+        ],
+        content: `The **Command Aliases** plugin lets you create short alternative names for any built-in command.
 
-## Examples
+## Difference from shortcuts
 
-\`\`\`yaml
-plugins:
-  command_aliases:
-    enabled: true
-    aliases:
-      - match: "!b"
-        expand_to: "!ban"
-      - match: "!k"
-        expand_to: "!kick"
-      - match: "!m"
-        expand_to: "!mute"
-      - match: "!w"
-        expand_to: "!warn"
+| | Shortcuts | Aliases |
+|--|-----------|---------|
+| Purpose | Apply a preset punishment | Redirect to another command |
+| Usage | \`>spam @user\` | \`>b @user ban reason\` |
+| Args | Pre-set (reason, duration) | Full command args still required |
+
+## Example aliases
+
+\`\`\`
+>alias add b    ban
+>alias add k    kick
+>alias add an   antinuke
+>alias add ar   antiraid
+>alias add bk   backup
+>alias add rc   resetconfig
 \`\`\`
 
-With this config, \`!b @user Spamming\` is identical to \`!ban @user Spamming\`.`,
-      },
-      {
-        id: "plugin-common",
-        title: "Common",
-        type: "plugin",
-        configKey: "common",
-        defaultConfig: `common:
-  enabled: true`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "true", description: "Enable common utility commands" },
-        ],
-        commands: [
-          { trigger: "!help", usage: "!help [command]", description: "Show bot help or help for a specific command", permissions: "0" },
-          { trigger: "!ping", usage: "!ping", description: "Check the bot's latency", permissions: "0" },
-          { trigger: "!info", usage: "!info", description: "Show bot version and stats", permissions: "0" },
-          { trigger: "!avatar", usage: "!avatar [@user]", description: "Show a user's avatar", permissions: "0" },
-          { trigger: "!serverinfo", usage: "!serverinfo", description: "Show server information", permissions: "0" },
-          { trigger: "!userinfo", usage: "!userinfo [@user]", description: "Show information about a user", permissions: "25" },
-        ],
-        content: `The **Common** plugin provides basic utility commands available in every server.`,
-      },
-      {
-        id: "plugin-companion-channels",
-        title: "Companion channels",
-        type: "plugin",
-        configKey: "companion_channels",
-        defaultConfig: `companion_channels:
-  enabled: false
-  pairs: []`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable companion channels" },
-          {
-            key: "pairs", type: "array", default: "[]", description: "List of companion channel pairs",
-            children: [
-              { key: "voice_channel", type: "string", description: "Voice channel ID" },
-              { key: "text_channel", type: "string", description: "Text channel ID to show when someone joins the voice channel" },
-            ],
-          },
-        ],
-        content: `The **Companion channels** plugin automatically shows or hides text channels based on voice channel membership.
+With these set, \`>b @user Spamming\` works exactly like \`>ban @user Spamming\`.
 
-## Use Cases
+## Limits
 
-- Give each voice channel its own private text channel
-- Only show a gaming text channel when users are in the gaming voice channel`,
-      },
-      {
-        id: "plugin-context-menu",
-        title: "Context menu",
-        type: "plugin",
-        configKey: "context_menu",
-        defaultConfig: `context_menu:
-  can_use: false
-  can_open_mod_menu: false`,
-        schema: [
-          { key: "can_use", type: "boolean", default: "false", description: "Allow members to use context menu actions" },
-          { key: "can_open_mod_menu", type: "boolean", default: "false", description: "Allow moderators to open the moderation context menu on users" },
-        ],
-        content: `The **Context menu** plugin adds right-click context menu actions to the bot.
-
-## Usage
-
-Right-click (or long-press on mobile) a user's message to access bot actions such as quick-warn, lookup, or mod menu.`,
-      },
-      {
-        id: "plugin-counters",
-        title: "Counters",
-        type: "plugin",
-        configKey: "counters",
-        defaultConfig: `counters:
-  enabled: false
-  counters: {}`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the counters plugin" },
-          {
-            key: "counters", type: "object", default: "{}", description: "Map of counter name to counter config",
-            children: [
-              { key: "initial_value", type: "number", default: "0", description: "Starting value for the counter" },
-              {
-                key: "triggers", type: "array", default: "[]", description: "Threshold triggers",
-                children: [
-                  { key: "condition", type: "string", description: "Condition expression (e.g. >=3)" },
-                  { key: "action", type: "string", description: "Action to take (mute, ban, kick, warn)" },
-                  { key: "duration", type: "duration", description: "Duration for timed actions like mute" },
-                  { key: "reason", type: "string", description: "Reason used for the action" },
-                ],
-              },
-            ],
-          },
-        ],
-        commands: [
-          { trigger: "!counter", usage: "!counter <get|set|add> <name> @user [value]", description: "Manage counter values for users", permissions: "25" },
-        ],
-        content: `The **Counters** plugin lets you define custom numeric counters per user and trigger automated actions when thresholds are reached.`,
-      },
-      {
-        id: "plugin-locate-user",
-        title: "Locate user",
-        type: "plugin",
-        configKey: "locate_user",
-        defaultConfig: `locate_user:
-  enabled: false`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the locate user plugin" },
-        ],
-        commands: [
-          { trigger: "!locate", usage: "!locate <user ID>", description: "Look up a user's servers (shared with the bot) and profile information", permissions: "75", examples: ["!locate 123456789012345678"] },
-          { trigger: "!whois", usage: "!whois <user ID>", description: "Get detailed information about a Discord user by ID", permissions: "50" },
-        ],
-        content: `The **Locate user** plugin provides tools to look up Discord users by ID and find information about them across servers the bot is in.
-
-## Use Cases
-
-- Identify alts by looking up an account's shared servers
-- Look up banned users by ID without being in the same server
-- Cross-reference suspicious accounts`,
-      },
-      {
-        id: "plugin-logs",
-        title: "Logs",
-        type: "plugin",
-        configKey: "logs",
-        defaultConfig: `logs:
-  enabled: false
-  log_channel: null
-  categories:
-    - message_delete
-    - message_edit
-    - member_join
-    - member_leave`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the logs plugin" },
-          { key: "log_channel", type: "string | null", default: "null", description: "Default channel ID for all log types" },
-          { key: "categories", type: "string[]", default: "[]", description: "List of event categories to log" },
-        ],
-        content: `The **Logs** plugin sends structured log embeds to a designated channel whenever configured server events occur.
-
-## Available Categories
-
-| Category | Description |
-|----------|-------------|
-| \`message_delete\` | Deleted messages with content |
-| \`message_edit\` | Edited messages showing before/after |
-| \`member_join\` | New member joins with account age warning |
-| \`member_leave\` | Members leaving or being kicked |
-| \`member_ban\` | Members being banned |
-| \`member_unban\` | Members being unbanned |
-| \`role_add\` | Roles added to members |
-| \`role_remove\` | Roles removed from members |
-| \`channel_create\` | Channels being created |
-| \`channel_delete\` | Channels being deleted |
-| \`voice_join\` | Voice channel joins |
-| \`voice_leave\` | Voice channel leaves |
-| \`voice_move\` | Moving between voice channels |`,
-      },
-      {
-        id: "plugin-mod-actions",
-        title: "Mod actions",
-        type: "plugin",
-        configKey: "moderation",
-        defaultConfig: `moderation:
-  enabled: false
-  mute_role: null
-  dm_on_action: true
-  mute_remove_roles: false
-  ban_delete_message_days: 1`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the moderation plugin" },
-          { key: "mute_role", type: "string | null", default: "null", description: "Role ID to apply when muting a user" },
-          { key: "dm_on_action", type: "boolean", default: "true", description: "DM the user when a moderation action is taken" },
-          { key: "mute_remove_roles", type: "boolean", default: "false", description: "Remove all roles when muting and restore on unmute" },
-          { key: "ban_delete_message_days", type: "number", default: "1", description: "Number of days of messages to delete on ban (0–7)" },
-        ],
-        commands: [
-          { trigger: "!ban", usage: "!ban @user [duration] [reason]", description: "Ban a user from the server", permissions: "50", examples: ["!ban @User Spamming", "!ban @User 7d Repeated violations"] },
-          { trigger: "!unban", usage: "!unban <user ID> [reason]", description: "Unban a user", permissions: "50" },
-          { trigger: "!kick", usage: "!kick @user [reason]", description: "Kick a user from the server", permissions: "50" },
-          { trigger: "!mute", usage: "!mute @user [duration] [reason]", description: "Mute a user", permissions: "25", examples: ["!mute @User 1h Spamming"] },
-          { trigger: "!unmute", usage: "!unmute @user [reason]", description: "Unmute a user", permissions: "25" },
-          { trigger: "!warn", usage: "!warn @user <reason>", description: "Warn a user", permissions: "25" },
-          { trigger: "!forceban", usage: "!forceban <user ID> [reason]", description: "Ban a user by ID even if they are not in the server", permissions: "50" },
-        ],
-        content: `The **Mod actions** plugin provides the core set of moderation commands for managing users in your server.`,
-      },
-      {
-        id: "plugin-mutes",
-        title: "Mutes",
-        type: "plugin",
-        configKey: "mutes",
-        defaultConfig: `mutes:
-  enabled: true
-  mute_role: null
-  move_to_voice_channel: null`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "true", description: "Enable the mutes plugin" },
-          { key: "mute_role", type: "string | null", default: "null", description: "Override the mute role (defaults to moderation plugin's mute_role)" },
-          { key: "move_to_voice_channel", type: "string | null", default: "null", description: "Move muted users to this voice channel ID" },
-        ],
-        commands: [
-          { trigger: "!mute", usage: "!mute @user [duration] [reason]", description: "Mute a user", permissions: "25" },
-          { trigger: "!unmute", usage: "!unmute @user [reason]", description: "Remove a user's mute", permissions: "25" },
-          { trigger: "!mutes", usage: "!mutes", description: "List all currently active mutes", permissions: "25" },
-        ],
-        content: `The **Mutes** plugin manages temporary and permanent mutes. Mutes automatically expire if a duration is specified, even if the bot restarts.`,
-      },
-      {
-        id: "plugin-persist",
-        title: "Persist",
-        type: "plugin",
-        configKey: "persist",
-        defaultConfig: `persist:
-  enabled: false
-  persist_roles: true
-  persist_nickname: false`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the persist plugin" },
-          { key: "persist_roles", type: "boolean", default: "true", description: "Re-apply a user's roles when they rejoin" },
-          { key: "persist_nickname", type: "boolean", default: "false", description: "Re-apply the user's nickname when they rejoin" },
-        ],
-        content: `The **Persist** plugin saves member data when they leave and restores it when they rejoin. This is most commonly used to keep mutes active even if a user leaves and rejoins to bypass them.
-
-## Anti-Mute-Bypass
-
-With \`persist_roles: true\`, if a muted user leaves and rejoins, the mute role is automatically reapplied.`,
-      },
-      {
-        id: "plugin-pingable-roles",
-        title: "Pingable roles",
-        type: "plugin",
-        configKey: "pingable_roles",
-        defaultConfig: `pingable_roles:
-  enabled: false
-  roles: []`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable pingable roles" },
-          {
-            key: "roles", type: "array", default: "[]", description: "List of pingable role configs",
-            children: [
-              { key: "role", type: "string", description: "Role ID to make temporarily pingable" },
-              { key: "cooldown", type: "duration", default: "30m", description: "Cooldown between pings" },
-              { key: "required_level", type: "number", default: "25", description: "Minimum permission level to ping this role" },
-            ],
-          },
-        ],
-        commands: [
-          { trigger: "!pingRole", usage: "!pingRole <role>", description: "Temporarily make a role mentionable and ping it", permissions: "25" },
-        ],
-        content: `The **Pingable roles** plugin lets moderators ping otherwise non-mentionable roles. The bot temporarily enables mentions on the role, pings it, then immediately disables mentions again.`,
-      },
-      {
-        id: "plugin-post",
-        title: "Post",
-        type: "plugin",
-        configKey: "post",
-        defaultConfig: `post:
-  enabled: false`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the post plugin" },
-        ],
-        commands: [
-          { trigger: "!post", usage: "!post <channel> <message>", description: "Post a message as the bot in a specified channel", permissions: "75" },
-          { trigger: "!edit", usage: "!edit <message URL or ID> <new content>", description: "Edit a message the bot previously sent", permissions: "75" },
-        ],
-        content: `The **Post** plugin lets moderators send and edit messages as the bot in any channel. Useful for announcements, rules, and pinned information.`,
-      },
-      {
-        id: "plugin-reminders",
-        title: "Reminders",
-        type: "plugin",
-        configKey: "reminders",
-        defaultConfig: `reminders:
-  enabled: true`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "true", description: "Enable the reminders plugin" },
-        ],
-        commands: [
-          { trigger: "!remindme", aliases: ["!remind"], usage: "!remindme <duration> <reminder>", description: "Set a reminder that the bot will DM you after the duration", permissions: "0", examples: ["!remindme 2h Check the oven", "!remindme 1d30m Meeting with team"] },
-          { trigger: "!reminders", usage: "!reminders", description: "List your active reminders", permissions: "0" },
-          { trigger: "!deletereminder", usage: "!deletereminder <id>", description: "Delete one of your reminders", permissions: "0" },
-        ],
-        content: `The **Reminders** plugin lets members set personal reminders that the bot delivers via DM.`,
-      },
-      {
-        id: "plugin-role-buttons",
-        title: "Role buttons",
-        type: "plugin",
-        configKey: "role_buttons",
-        defaultConfig: `role_buttons:
-  enabled: false
-  buttons: []`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable role buttons" },
-          {
-            key: "buttons", type: "array", default: "[]", description: "List of role button configs",
-            children: [
-              { key: "message_id", type: "string", description: "Message ID to attach buttons to" },
-              { key: "channel_id", type: "string", description: "Channel the message is in" },
-              { key: "roles", type: "object[]", description: "Roles and their button labels/emojis" },
-            ],
-          },
-        ],
-        content: `The **Role buttons** plugin creates interactive Discord buttons that members can click to assign or remove roles from themselves.
-
-## Setup
-
-1. Use \`!post\` to post a message as the bot
-2. Copy the message ID
-3. Configure role buttons pointing to that message
-
-Members click the buttons to toggle their roles.`,
-      },
-      {
-        id: "plugin-roles",
-        title: "Roles",
-        type: "plugin",
-        configKey: "roles",
-        defaultConfig: `roles:
-  enabled: false`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the roles plugin" },
-        ],
-        commands: [
-          { trigger: "!role", usage: "!role @user <add|remove> <role>", description: "Add or remove a role from a user", permissions: "50" },
-          { trigger: "!massrole", usage: "!massrole <add|remove> <role>", description: "Add or remove a role from all members (use with caution)", permissions: "100" },
-        ],
-        content: `The **Roles** plugin provides commands for managing Discord roles on members.`,
-      },
-      {
-        id: "plugin-self-grantable-roles",
-        title: "Self-grantable roles",
-        type: "plugin",
-        configKey: "self_grantable_roles",
-        defaultConfig: `self_grantable_roles:
-  enabled: false
-  roles: []`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable self-grantable roles" },
-          {
-            key: "roles", type: "array", default: "[]", description: "Roles members can give themselves",
-            children: [
-              { key: "role", type: "string", description: "Role ID" },
-              { key: "aliases", type: "string[]", description: "Alternative names to use in the command" },
-            ],
-          },
-        ],
-        commands: [
-          { trigger: "!role", usage: "!role <role name>", description: "Grant yourself a self-assignable role", permissions: "0" },
-          { trigger: "!roles", usage: "!roles", description: "List all self-assignable roles", permissions: "0" },
-        ],
-        content: `The **Self-grantable roles** plugin lets members assign and remove specific roles themselves without needing staff assistance.`,
-      },
-      {
-        id: "plugin-slowmode",
-        title: "Slowmode",
-        type: "plugin",
-        configKey: "slowmode",
-        defaultConfig: `slowmode:
-  enabled: false`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the slowmode plugin" },
-        ],
-        commands: [
-          { trigger: "!slowmode", aliases: ["!slow"], usage: "!slowmode [channel] <duration|off>", description: "Set slowmode for a channel, or turn it off", permissions: "25", examples: ["!slowmode 5s", "!slowmode #general 30s", "!slowmode off"] },
-        ],
-        content: `The **Slowmode** plugin provides commands for quickly setting and clearing Discord's native channel slowmode.`,
-      },
-      {
-        id: "plugin-starboard",
-        title: "Starboard",
-        type: "plugin",
-        configKey: "starboard",
-        defaultConfig: `starboard:
-  enabled: false
-  channel: null
-  emoji: "⭐"
-  threshold: 3`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the starboard" },
-          { key: "channel", type: "string | null", default: "null", description: "Channel ID for the starboard" },
-          { key: "emoji", type: "string", default: "⭐", description: "Emoji to count for starring messages" },
-          { key: "threshold", type: "number", default: "3", description: "Number of reactions needed to post to the starboard" },
-          { key: "ignore_channels", type: "string[]", default: "[]", description: "Channels to exclude from the starboard" },
-        ],
-        content: `The **Starboard** plugin reposts highly-reacted messages to a dedicated starboard channel, letting the community highlight notable messages.`,
-      },
-      {
-        id: "plugin-tags",
-        title: "Tags",
-        type: "plugin",
-        configKey: "tags",
-        defaultConfig: `tags:
-  enabled: false
-  prefix: "!"`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the tags plugin" },
-          { key: "prefix", type: "string", default: "!", description: "Prefix for tag invocation" },
-        ],
-        commands: [
-          { trigger: "!tag", usage: "!tag <name>", description: "Invoke a tag by name", permissions: "0" },
-          { trigger: "!tag create", usage: "!tag create <name> <content>", description: "Create a new tag", permissions: "50" },
-          { trigger: "!tag edit", usage: "!tag edit <name> <new content>", description: "Edit an existing tag", permissions: "50" },
-          { trigger: "!tag delete", usage: "!tag delete <name>", description: "Delete a tag", permissions: "50" },
-          { trigger: "!tags", usage: "!tags", description: "List all tags in the server", permissions: "0" },
-        ],
-        content: `The **Tags** plugin lets moderators create pre-written text snippets (tags) that can be instantly retrieved by anyone. Tags are useful for frequently asked questions and common responses.
-
-## Example
-
-Create a tag for rules:
-\`\`\`
-!tag create rules Please read #rules before posting.
-\`\`\`
-
-Anyone can then use \`!tag rules\` (or \`!rules\` if configured) to retrieve it.`,
-      },
-      {
-        id: "plugin-time-and-date",
-        title: "Time and date",
-        type: "plugin",
-        configKey: "time_and_date",
-        defaultConfig: `time_and_date:
-  enabled: true`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "true", description: "Enable the time and date plugin" },
-        ],
-        commands: [
-          { trigger: "!time", usage: "!time [timezone]", description: "Show the current time in a timezone", permissions: "0", examples: ["!time UTC", "!time America/New_York"] },
-          { trigger: "!stamp", usage: "!stamp <date/time> [timezone]", description: "Convert a time to a Discord timestamp", permissions: "0" },
-        ],
-        content: `The **Time and date** plugin provides commands for looking up times across timezones and generating Discord timestamp formats.`,
-      },
-      {
-        id: "plugin-utility",
-        title: "Utility",
-        type: "plugin",
-        configKey: "utility",
-        defaultConfig: `utility:
-  enabled: true`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "true", description: "Enable the utility plugin" },
-        ],
-        commands: [
-          { trigger: "!purge", usage: "!purge <count> [@user]", description: "Delete multiple messages at once, optionally filtered to a user", permissions: "25", examples: ["!purge 10", "!purge 50 @User"] },
-          { trigger: "!clean", usage: "!clean <count>", description: "Delete bot messages", permissions: "25" },
-          { trigger: "!snipe", usage: "!snipe [channel]", description: "Show the most recently deleted message", permissions: "25" },
-          { trigger: "!editsnipe", usage: "!editsnipe [channel]", description: "Show the most recently edited message", permissions: "25" },
-          { trigger: "!id", usage: "!id [@user | #channel | @role]", description: "Get the Discord ID of a user, channel, or role", permissions: "0" },
-          { trigger: "!embed", usage: "!embed <channel> <title> | <description>", description: "Post an embed as the bot", permissions: "75" },
-        ],
-        content: `The **Utility** plugin provides general-purpose moderation tools like bulk message deletion and message sniping.`,
-      },
-      {
-        id: "plugin-welcome-message",
-        title: "Welcome message",
-        type: "plugin",
-        configKey: "welcome_message",
-        defaultConfig: `welcome_message:
-  enabled: false
-  channel: null
-  message: "Welcome to the server, {user}!"
-  dm_message: null`,
-        schema: [
-          { key: "enabled", type: "boolean", default: "false", description: "Enable the welcome message plugin" },
-          { key: "channel", type: "string | null", default: "null", description: "Channel ID to post the welcome message in" },
-          { key: "message", type: "string", default: "Welcome to the server, {user}!", description: "The welcome message. Use {user} for a mention, {username} for name, {server} for server name" },
-          { key: "dm_message", type: "string | null", default: "null", description: "Optional DM message to send to new members" },
-        ],
-        content: `The **Welcome message** plugin sends a message when a new member joins your server.
-
-## Template Variables
-
-| Variable | Replaced With |
-|----------|--------------|
-| \`{user}\` | Mention of the new member |
-| \`{username}\` | Username without mention |
-| \`{server}\` | Server name |
-| \`{memberCount}\` | Total member count |`,
+- Each built-in command can have at most **10 aliases**
+- Aliases cannot overwrite existing command names`,
       },
     ],
   },
