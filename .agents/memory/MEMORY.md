@@ -1,0 +1,7 @@
+- [Project stack](stack.md) — discord.js v14 + Express 5 + React/Vite dashboard, pnpm monorepo; bot token is intentionally invalid (pre-existing)
+- [Custom commands store](custom-commands.md) — 50-cap per guild, "warm"/"bam" presets in dashboard; DB key "customCommands", hooked in messageCreate
+- [Ticket open message](ticket-open-message.md) — configurable via dashboard Settings tab; stored as cfg.openMessage in ticketConfig DB key
+- [App config](app-config.md) — cooldown, notifyApplicant, blacklist stored under DB key "appConfig"; separate from application forms
+- [Anti-raid system](antiraid.md) — rebuilt with action levels 1–4, new-account detection, verification gate, user+role whitelist; DB key "antiraid"
+- [Anti-nuke system](antinuke.md) — rebuilt with 9 thresholds (incl. webhookDelete/massTimeout), recovery cache, dangerous-perm watch, server-update watch, DM owner, role whitelist; DB key "antinuke"
+- [Server logging no automod](serverlogging-no-automod.md) — automod category removed from LogCategory type, EVENT_CATEGORY map, serverLogs.ts listener, and Logging.tsx dashboard

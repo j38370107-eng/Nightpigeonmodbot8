@@ -1,0 +1,79 @@
+modules = ["nodejs-20", "web", "bash"]
+
+[deployment]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Dylan Deadly Nights Bot"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Dashboard Dev"
+
+[[workflows.workflow]]
+name = "Dylan Deadly Nights Bot"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/api-server run dev"
+waitForPort = 3000
+
+[[workflows.workflow]]
+name = "Dashboard Dev"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "DASHBOARD_PORT=5000 pnpm --filter @workspace/dashboard run dev"
+waitForPort = 5000
+
+[agent]
+stack = "BEST_EFFORT_FALLBACK"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000
+
+[[ports]]
+localPort = 3000
+externalPort = 3001
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[nix]
+packages = ["zip", "run"]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+PORT = "3000"
+DATA_DIR = "/home/runner/workspace/artifacts/api-server/data"
+DASHBOARD_PORT = "5000"
+NODE_ENV = "development"
+DASHBOARD_URL = "https://63a90b22-a0a8-45c0-a1d0-9eac230a32cc-00-ih7xftoey3j8.picard.replit.dev"
+BOT_API_URL = "http://localhost:3000"

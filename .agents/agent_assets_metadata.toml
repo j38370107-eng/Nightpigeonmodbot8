@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "JU_kzGj6umWXhh3dpiV85"
+uri = "file://SETUP_GUIDE.md"
+type = "text"
+title = "Render Setup Guide"

@@ -1,0 +1,19 @@
+import { Router } from "express";
+import { refreshAutomodForGuild } from "../bot/store/automod";
+import { logger } from "../lib/logger";
+
+const router = Router();
+
+router.post("/cache/automod/:guildId", async (req: any, res: any) => {
+  const { guildId } = req.params;
+  try {
+    await refreshAutomodForGuild(guildId);
+    logger.info({ guildId }, "Automod cache refreshed via API");
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err, guildId }, "Failed to refresh automod cache");
+    res.status(500).json({ error: "refresh failed" });
+  }
+});
+
+export default router;
