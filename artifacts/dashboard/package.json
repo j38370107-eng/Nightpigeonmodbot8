@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm exec vite build && node_modules/.bin/tsx --tsconfig tsconfig.json server/index.ts",
+    "dev": "pnpm exec vite build && node_modules/.bin/tsx server/index.ts",
     "build:client": "pnpm exec vite build",
     "build:server": "node ./build-server.mjs",
     "build": "pnpm exec vite build && node ./build-server.mjs",
