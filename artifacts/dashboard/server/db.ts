@@ -5,7 +5,7 @@ if (!url) throw new Error("DATABASE_URL is required for dashboard");
 
 export const pool = new Pool({
   connectionString: url,
-  ssl: { rejectUnauthorized: true },
+  ssl: { rejectUnauthorized: false },
   max: 5,
 });
 
