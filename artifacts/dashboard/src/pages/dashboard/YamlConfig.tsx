@@ -218,7 +218,7 @@ export default function YamlConfig() {
           Loading configuration…
         </div>
       ) : (
-        <div style={{
+        <div className="yaml-cm-wrap" style={{
           height: "calc(100vh - 240px)", minHeight: 400,
           borderRadius: 6, border: "1px solid var(--border)",
           overflow: "hidden",
