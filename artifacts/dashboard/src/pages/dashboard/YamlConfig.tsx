@@ -1,9 +1,79 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { api } from "../../lib/api";
 import yaml from "js-yaml";
+import CodeMirror from "@uiw/react-codemirror";
+import { yaml as yamlLang } from "@codemirror/lang-yaml";
+import { EditorView } from "@codemirror/view";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags } from "@lezer/highlight";
+import { Extension } from "@codemirror/state";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+
+const nightPigeonTheme = EditorView.theme({
+  "&": {
+    background: "#161c27",
+    color: "#dce7f5",
+    height: "100%",
+    fontSize: "13px",
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+  },
+  ".cm-content": {
+    padding: "14px 16px",
+    lineHeight: "1.65",
+    caretColor: "#57f287",
+  },
+  ".cm-gutters": {
+    background: "#1c2333",
+    color: "#3a4a63",
+    border: "none",
+    borderRight: "1px solid #2a3349",
+    minWidth: "48px",
+    padding: "14px 10px 14px 0",
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
+    fontSize: "13px",
+    lineHeight: "1.65",
+  },
+  ".cm-lineNumbers .cm-gutterElement": {
+    padding: "0 6px 0 0",
+    lineHeight: "1.65",
+    minWidth: "32px",
+    textAlign: "right",
+  },
+  ".cm-activeLine": { background: "rgba(87,242,135,0.04)" },
+  ".cm-activeLineGutter": { background: "rgba(87,242,135,0.07)", color: "#7a9abf" },
+  ".cm-cursor": { borderLeftColor: "#57f287" },
+  ".cm-selectionBackground, ::selection": { background: "rgba(87,242,135,0.18) !important" },
+  ".cm-focused .cm-selectionBackground": { background: "rgba(87,242,135,0.18)" },
+  ".cm-line": { padding: "0" },
+  "&.cm-focused": { outline: "none" },
+  ".cm-scroller": { overflow: "auto", lineHeight: "1.65" },
+  ".cm-foldGutter": { display: "none" },
+}, { dark: true });
+
+const nightPigeonHighlight = HighlightStyle.define([
+  { tag: tags.comment,           color: "#5c6f8a", fontStyle: "italic" },
+  { tag: tags.keyword,           color: "#c678dd" },
+  { tag: tags.string,            color: "#98c379" },
+  { tag: tags.number,            color: "#d19a66" },
+  { tag: tags.bool,              color: "#d19a66" },
+  { tag: tags.null,              color: "#d19a66" },
+  { tag: tags.atom,              color: "#d19a66" },
+  { tag: tags.propertyName,      color: "#e06c75" },
+  { tag: tags.punctuation,       color: "#7a8ba8" },
+  { tag: tags.operator,          color: "#56b6c2" },
+  { tag: tags.typeName,          color: "#e5c07b" },
+  { tag: tags.variableName,      color: "#dce7f5" },
+  { tag: tags.definition(tags.propertyName), color: "#e06c75", fontWeight: "600" },
+]);
+
+const extensions: Extension[] = [
+  yamlLang(),
+  nightPigeonTheme,
+  syntaxHighlighting(nightPigeonHighlight),
+  EditorView.lineWrapping,
+];
 
 export default function YamlConfig() {
   const { guildId } = useParams<{ guildId: string }>();
@@ -14,8 +84,6 @@ export default function YamlConfig() {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [validationError, setValidationError] = useState("");
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const gutterRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
     if (!guildId) return;
@@ -60,14 +128,6 @@ export default function YamlConfig() {
     }
   };
 
-  // Sync gutter scroll with textarea
-  const handleScroll = () => {
-    if (textareaRef.current && gutterRef.current) {
-      gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
-  };
-
-  // Keyboard shortcut: Ctrl/Cmd+S to save
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "s") {
@@ -96,7 +156,6 @@ export default function YamlConfig() {
 
   return (
     <div style={{ padding: "36px 32px", maxWidth: 980, minHeight: "100%", boxSizing: "border-box" }}>
-      {/* Title */}
       <h1 style={{
         fontSize: 28, fontWeight: 700, color: "var(--text-primary)",
         marginBottom: 20, letterSpacing: "-0.3px",
@@ -104,7 +163,6 @@ export default function YamlConfig() {
         {guildName ? `Config for ${guildName}` : "Config"}
       </h1>
 
-      {/* Save button row */}
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
         <button
           onClick={handleSave}
@@ -151,7 +209,6 @@ export default function YamlConfig() {
         </span>
       </div>
 
-      {/* Editor */}
       {loading ? (
         <div style={{
           height: 520, borderRadius: 6, border: "1px solid var(--border)",
@@ -161,28 +218,27 @@ export default function YamlConfig() {
           Loading configuration…
         </div>
       ) : (
-        <div className="yaml-editor-wrap" style={{ height: "calc(100vh - 240px)", minHeight: 400 }}>
-          {/* Gutter */}
-          <div
-            ref={gutterRef}
-            className="yaml-gutter"
-            style={{ overflowY: "hidden" }}
-          >
-            {lines.map((_, i) => (
-              <span key={i} className="yaml-gutter-line">{i + 1}</span>
-            ))}
-          </div>
-
-          {/* Textarea */}
-          <textarea
-            ref={textareaRef}
-            className="yaml-textarea"
+        <div style={{
+          height: "calc(100vh - 240px)", minHeight: 400,
+          borderRadius: 6, border: "1px solid var(--border)",
+          overflow: "hidden",
+        }}>
+          <CodeMirror
             value={value}
-            onChange={e => handleChange(e.target.value)}
-            onScroll={handleScroll}
-            spellCheck={false}
-            autoCapitalize="none"
-            autoCorrect="off"
+            onChange={handleChange}
+            extensions={extensions}
+            basicSetup={{
+              lineNumbers: true,
+              foldGutter: false,
+              highlightActiveLineGutter: true,
+              highlightActiveLine: true,
+              autocompletion: false,
+              searchKeymap: false,
+              bracketMatching: true,
+              indentOnInput: true,
+              tabSize: 2,
+            }}
+            style={{ height: "100%" }}
           />
         </div>
       )}
