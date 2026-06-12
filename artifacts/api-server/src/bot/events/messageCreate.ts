@@ -1,9 +1,8 @@
-import { Client, Message, TextChannel } from "discord.js";
+import { Client, Message, TextChannel, EmbedBuilder } from "discord.js";
 import { logger } from "../../lib/logger";
 import { getPrefix } from "../store/prefixes";
 import { getShortcut } from "../store/shortcuts";
 import { memberHasModRole } from "../store/modroles";
-import { getAfk, clearAfk } from "../store/afk";
 import { getAlias } from "../store/aliases";
 import { isGuildBlacklisted, isUserBlacklisted, OWNER_ID } from "../store/ownerBlacklists";
 import { runAutomod } from "../lib/runAutomod";
@@ -182,34 +181,6 @@ export function registerMessageHandler(client: Client) {
     const dbPrefix = getPrefix(guildId);
     const isCommand = message.content.startsWith(yamlPrefix) || message.content.startsWith(dbPrefix);
     const prefix = message.content.startsWith(yamlPrefix) ? yamlPrefix : dbPrefix;
-
-    // ── AFK: clear status if AFK user sends a message ────────────────────────
-    if (!isCommand) {
-      const afk = getAfk(guildId, message.author.id);
-      if (afk) {
-        clearAfk(guildId, message.author.id);
-        const since = Math.floor(afk.since / 1000);
-        const notice = await message.channel
-          .send(`👋 Welcome back <@${message.author.id}>! Your AFK has been removed (set <t:${since}:R>).`)
-          .catch(() => null);
-        if (notice) setTimeout(() => notice.delete().catch(() => {}), 8000);
-      }
-    }
-
-    // ── AFK: notify if someone mentions an AFK user (non-commands only) ──────
-    if (!isCommand && message.mentions.users.size > 0) {
-      for (const [userId, user] of message.mentions.users) {
-        if (user.bot) continue;
-        if (userId === message.author.id) continue;
-        const afk = getAfk(guildId, userId);
-        if (afk) {
-          const since = Math.floor(afk.since / 1000);
-          await message.reply(
-            `💤 <@${userId}> is currently AFK: **${afk.reason}** (since <t:${since}:R>)`
-          ).catch(() => {});
-        }
-      }
-    }
 
     // ── AutoMod (non-command messages only) ──────────────────────────────────
     if (!isCommand) {

@@ -15,9 +15,6 @@ import { resetAntiNukeConfig } from "../store/antinuke";
 import { resetAntiRaidConfig } from "../store/antiraid";
 import { clearShortcuts } from "../store/shortcuts";
 import { clearAliases } from "../store/aliases";
-import { setLockdownChannels } from "../store/lockdown";
-import { resetTicketConfig } from "../store/tickets";
-import { clearAllAdditionalInfo } from "../store/additionalInfo";
 
 const WHAT_RESETS = [
   "• Command prefix → `>`",
@@ -98,9 +95,6 @@ export const resetConfigCommand: Command = {
       resetAntiRaidConfig(guildId);
       clearShortcuts(guildId);
       clearAliases(guildId);
-      setLockdownChannels(guildId, []);
-      resetTicketConfig(guildId);
-      clearAllAdditionalInfo(guildId);
 
       const doneEmbed = new EmbedBuilder()
         .setColor(0xe74c3c)

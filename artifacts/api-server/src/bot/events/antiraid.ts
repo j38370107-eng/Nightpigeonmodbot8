@@ -7,7 +7,6 @@ import {
   AuditLogEvent,
 } from "discord.js";
 import { getAntiRaid } from "../store/antiraid";
-import { getLockdownChannels } from "../store/lockdown";
 import { sendSecurityLog } from "../lib/securityLog";
 import { logger } from "../../lib/logger";
 
@@ -223,36 +222,6 @@ async function executeRaidResponse(
   }
 
   return { punished, failed };
-}
-
-// ── Execute lockdown for level 4 raids ────────────────────────────────────────
-async function executeLockdown(
-  client: Client,
-  member: GuildMember,
-): Promise<string[]> {
-  const cfg = getAntiRaid(member.guild.id);
-  if (!cfg.lockdown && cfg.actionLevel !== 4) return [];
-
-  const channelIds = getLockdownChannels(member.guild.id);
-  const locked: string[] = [];
-
-  for (const id of channelIds) {
-    try {
-      const ch = (await member.guild.channels
-        .fetch(id)
-        .catch(() => null)) as TextChannel | null;
-      if (!ch || !("permissionOverwrites" in ch)) continue;
-      await ch.permissionOverwrites.edit(
-        member.guild.roles.everyone,
-        { SendMessages: false } as PermissionOverwriteResolvable,
-      );
-      locked.push(id);
-    } catch {
-      /* skip */
-    }
-  }
-
-  return locked;
 }
 
 // ── Handle individual new-account join ───────────────────────────────────────
@@ -602,10 +571,7 @@ export function registerAntiRaidEvents(client: Client) {
 
     const reason = `Anti-Raid (Level ${cfg.actionLevel}): ${raidJoins.length} joins in ${cfg.joinWindowMs / 1000}s`;
 
-    const [lockedChannels, { punished, failed }] = await Promise.all([
-      executeLockdown(client, member),
-      executeRaidResponse(client, member, raidJoins, reason),
-    ]);
+    const { punished, failed } = await executeRaidResponse(client, member, raidJoins, reason);
 
     const levelDesc: Record<number, string> = {
       1: "Alert only",
@@ -645,13 +611,6 @@ export function registerAntiRaidEvents(client: Client) {
       fields.push({
         name: `Failed (${failed.length})`,
         value: failed.map((id) => `<@${id}>`).join(", "),
-      });
-    }
-
-    if (lockedChannels.length > 0) {
-      fields.push({
-        name: "Channels Locked",
-        value: lockedChannels.map((id) => `<#${id}>`).join(", "),
       });
     }
 

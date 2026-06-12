@@ -1,5 +1,5 @@
 import { Client, EmbedBuilder, TextChannel } from "discord.js";
-import { getLogChannel } from "../store/modlog";
+import { getGuildSetting } from "../store/settings";
 import { logger } from "../../lib/logger";
 import { sendViaWebhook } from "./webhookSender";
 
@@ -15,7 +15,7 @@ export async function sendSecurityLog(
   dedicatedChannelId: string | undefined,
   entry: SecurityLogEntry
 ): Promise<void> {
-  const channelId = dedicatedChannelId ?? getLogChannel(guildId);
+  const channelId = dedicatedChannelId ?? getGuildSetting(guildId, "logChannelId");
   if (!channelId) {
     logger.debug({ guildId }, "No security log channel set — skipping");
     return;

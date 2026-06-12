@@ -1,7 +1,7 @@
 import { Message, PermissionFlagsBits, EmbedBuilder } from "discord.js";
 import type { Command } from "./types";
 import { usageErr } from "../lib/usageError";
-import { setLogChannel } from "../store/modlog";
+import { setGuildSetting } from "../store/settings";
 
 export const setLogChannelCommand: Command = {
   name: "setmodlogs",
@@ -21,7 +21,7 @@ export const setLogChannelCommand: Command = {
       return message.reply(usageErr(message, setLogChannelCommand, "Mention a valid text channel"));
     }
 
-    setLogChannel(message.guild.id, channel.id);
+    setGuildSetting(message.guild.id, "logChannelId", channel.id);
 
     const embed = new EmbedBuilder()
       .setColor(0x2ecc71)

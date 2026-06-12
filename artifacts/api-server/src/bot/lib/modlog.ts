@@ -1,5 +1,5 @@
 import { Client, EmbedBuilder, TextChannel } from "discord.js";
-import { getLogChannel } from "../store/modlog";
+import { getGuildSetting } from "../store/settings";
 import { logger } from "../../lib/logger";
 import { sendViaWebhook } from "./webhookSender";
 
@@ -14,7 +14,7 @@ export interface ModLogEntry {
 }
 
 export async function sendModLog(client: Client, guildId: string, entry: ModLogEntry) {
-  const channelId = getLogChannel(guildId);
+  const channelId = getGuildSetting(guildId, "logChannelId");
   if (!channelId) {
     logger.debug({ guildId }, "No mod-log channel set for guild — skipping log");
     return;

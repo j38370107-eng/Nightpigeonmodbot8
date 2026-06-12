@@ -5,7 +5,6 @@ import { getAntiNuke, setAntiNuke } from "../store/antinuke";
 import { getAntiRaid, updateAntiRaid } from "../store/antiraid";
 import { getAutomodConfig, setAutomodConfig } from "../store/automod";
 import { getModRoles, clearModRoles, addModRole } from "../store/modroles";
-import { getLockdownChannels, setLockdownChannels } from "../store/lockdown";
 import { getShortcutsRaw, clearShortcuts, setShortcut } from "../store/shortcuts";
 import { listAliases, clearAliases, setAlias } from "../store/aliases";
 import { getGuildSetting, setGuildSetting } from "../store/settings";
@@ -37,7 +36,6 @@ function buildBackup(guildId: string) {
     antiraid: getAntiRaid(guildId),
     automod: getAutomodConfig(guildId),
     modroles: getModRoles(guildId),
-    lockdownChannels: getLockdownChannels(guildId),
     shortcuts: getShortcutsRaw(guildId),
     aliases: listAliases(guildId),
   };
@@ -74,11 +72,6 @@ async function restoreBackup(guildId: string, data: ReturnType<typeof buildBacku
     clearModRoles(guildId);
     for (const roleId of data.modroles) addModRole(guildId, roleId);
     log.push(`✅ Mod roles restored (${data.modroles.length})`);
-  }
-
-  if (Array.isArray(data.lockdownChannels)) {
-    setLockdownChannels(guildId, data.lockdownChannels);
-    log.push(`✅ Lockdown channels restored (${data.lockdownChannels.length})`);
   }
 
   if (data.shortcuts && typeof data.shortcuts === "object") {
@@ -135,8 +128,7 @@ export const backupCommand: Command = {
             { name: "Aliases", value: `${Object.keys(data.aliases).length}`, inline: true },
             { name: "Mod Roles", value: `${data.modroles.length}`, inline: true },
             { name: "Anti-Nuke", value: data.antinuke.enabled ? "Enabled" : "Disabled", inline: true },
-            { name: "Anti-Raid", value: data.antiraid.enabled ? "Enabled" : "Disabled", inline: true },
-            { name: "Lockdown Channels", value: `${data.lockdownChannels.length}`, inline: true }
+            { name: "Anti-Raid", value: data.antiraid.enabled ? "Enabled" : "Disabled", inline: true }
           )
           .setTimestamp()
           .setFooter({ text: `Exported by ${message.author.tag}` });
