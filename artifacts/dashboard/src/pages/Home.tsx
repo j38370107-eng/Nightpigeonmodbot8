@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../App";
 
+
 export default function Home() {
   const { user } = useAuth();
 
@@ -146,10 +147,8 @@ export default function Home() {
             </a>
           )}
 
-          <a
-            href="https://en.wikipedia.org/wiki/Internet_bot"
-            target="_blank"
-            rel="noreferrer"
+          <Link
+            to="/docs"
             style={{
               padding: "12px 32px",
               borderRadius: 8,
@@ -172,8 +171,8 @@ export default function Home() {
               (e.currentTarget as HTMLAnchorElement).style.borderColor = "rgba(255,255,255,0.55)";
             }}
           >
-            Wikipedia
-          </a>
+            Documentation
+          </Link>
         </div>
 
         {/* Footer links */}

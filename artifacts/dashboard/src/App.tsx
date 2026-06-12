@@ -8,6 +8,7 @@ import Apply from "./pages/Apply";
 import DashboardLayout from "./components/DashboardLayout";
 import Overview from "./pages/dashboard/Overview";
 import YamlConfig from "./pages/dashboard/YamlConfig";
+import Docs from "./pages/Docs";
 
 interface AuthCtx {
   user: any | null;
@@ -121,6 +122,8 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/servers" element={<RequireAuth><GuildSelect /></RequireAuth>} />
             <Route path="/apply/:guildId/:formId" element={<Apply />} />
+            <Route path="/docs" element={<Docs />} />
+            <Route path="/docs/:pageId" element={<Docs />} />
             <Route path="/dashboard/:guildId" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
               <Route index element={<Overview />} />
               <Route path="config" element={<YamlConfig />} />
