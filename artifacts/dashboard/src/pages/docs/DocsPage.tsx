@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { docSections, DocPage, SchemaField } from "./docContent";
 
@@ -172,17 +172,19 @@ function CommandTable({ commands }: { commands: NonNullable<DocPage["commands"]>
 function PageContent({ page }: { page: DocPage }) {
   return (
     <div>
-      <div style={{ marginBottom: 32 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{page.title}</h1>
-          {page.type === "plugin" && page.configKey && (
-            <code style={{ ...inlineCodeStyle, fontSize: 12, background: "var(--accent)22", color: "var(--accent)", border: "1px solid var(--accent)44" }}>
-              plugins.{page.configKey}
-            </code>
-          )}
+      {page.type === "plugin" && (
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--text-primary)", margin: 0 }}>{page.title}</h1>
+            {page.configKey && (
+              <code style={{ ...inlineCodeStyle, fontSize: 12, background: "var(--accent)22", color: "var(--accent)", border: "1px solid var(--accent)44" }}>
+                plugins.{page.configKey}
+              </code>
+            )}
+          </div>
+          <div style={{ width: 40, height: 2, background: "var(--accent)", borderRadius: 2 }} />
         </div>
-        <div style={{ width: 40, height: 2, background: "var(--accent)", borderRadius: 2 }} />
-      </div>
+      )}
 
       {page.content && (
         <div style={{ marginBottom: 32 }}>{renderContent(page.content)}</div>
