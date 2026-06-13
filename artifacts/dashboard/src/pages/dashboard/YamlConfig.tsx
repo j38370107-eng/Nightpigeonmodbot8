@@ -10,6 +10,7 @@ import { tags } from "@lezer/highlight";
 import { Extension } from "@codemirror/state";
 
 type SaveState = "idle" | "saving" | "saved" | "error";
+type CopyState = "idle" | "copied";
 
 const nightPigeonTheme = EditorView.theme({
   "&": {
@@ -19,28 +20,15 @@ const nightPigeonTheme = EditorView.theme({
     fontSize: "13px",
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
   },
-  ".cm-content": {
-    padding: "14px 16px",
-    lineHeight: "1.65",
-    caretColor: "#57f287",
-  },
+  ".cm-content": { padding: "14px 16px", lineHeight: "1.65", caretColor: "#57f287" },
   ".cm-gutters": {
-    background: "#1c2333",
-    color: "#3a4a63",
-    border: "none",
-    borderRight: "1px solid #2a3349",
-    minWidth: "48px",
+    background: "#1c2333", color: "#3a4a63", border: "none",
+    borderRight: "1px solid #2a3349", minWidth: "48px",
     padding: "14px 10px 14px 0",
     fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
-    fontSize: "13px",
-    lineHeight: "1.65",
+    fontSize: "13px", lineHeight: "1.65",
   },
-  ".cm-lineNumbers .cm-gutterElement": {
-    padding: "0 6px 0 0",
-    lineHeight: "1.65",
-    minWidth: "32px",
-    textAlign: "right",
-  },
+  ".cm-lineNumbers .cm-gutterElement": { padding: "0 6px 0 0", lineHeight: "1.65", minWidth: "32px", textAlign: "right" },
   ".cm-activeLine": { background: "rgba(87,242,135,0.04)" },
   ".cm-activeLineGutter": { background: "rgba(87,242,135,0.07)", color: "#7a9abf" },
   ".cm-cursor": { borderLeftColor: "#57f287" },
@@ -84,6 +72,7 @@ export default function YamlConfig() {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [validationError, setValidationError] = useState("");
+  const [copyState, setCopyState] = useState<CopyState>("idle");
 
   const load = useCallback(() => {
     if (!guildId) return;
@@ -113,7 +102,7 @@ export default function YamlConfig() {
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!guildId || validationError || saveState === "saving") return;
     setSaveState("saving");
     setErrorMsg("");
@@ -126,6 +115,33 @@ export default function YamlConfig() {
       setErrorMsg(e.message ?? "Failed to save");
       setSaveState("error");
     }
+  }, [guildId, validationError, saveState, value]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyState("copied");
+      setTimeout(() => setCopyState("idle"), 2000);
+    } catch {
+      // fallback: select all text (mobile)
+      const ta = document.querySelector<HTMLTextAreaElement>(".cm-content");
+      if (ta) {
+        const range = document.createRange();
+        range.selectNodeContents(ta);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
+    }
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) handleChange(text);
+    } catch {
+      // If clipboard read is blocked, focus the editor so the user can paste manually
+      document.querySelector<HTMLElement>(".cm-content")?.focus();
+    }
   };
 
   useEffect(() => {
@@ -137,14 +153,14 @@ export default function YamlConfig() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  });
+  }, [handleSave]);
 
-  const lines = value.split("\n");
+  const lines = value.split("\n").length;
   const isDirty = value !== original;
 
   const saveLabel =
     saveState === "saving" ? "Saving…" :
-    saveState === "saved"  ? "Saved!" :
+    saveState === "saved"  ? "✓ Saved" :
     saveState === "error"  ? "Error" :
     "Save";
 
@@ -155,74 +171,62 @@ export default function YamlConfig() {
     "#4a9e5c";
 
   return (
-    <div style={{ padding: "36px 32px", maxWidth: 980, minHeight: "100%", boxSizing: "border-box" }}>
-      <h1 style={{
-        fontSize: 28, fontWeight: 700, color: "var(--text-primary)",
-        marginBottom: 20, letterSpacing: "-0.3px",
-      }}>
-        {guildName ? `Config for ${guildName}` : "Config"}
-      </h1>
+    <div className="yaml-page">
+      <div className="yaml-page-header">
+        <h1 className="yaml-page-title">
+          {guildName ? `${guildName} — Config` : "Config"}
+        </h1>
+      </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
-        <button
-          onClick={handleSave}
-          disabled={!isDirty || !!validationError || saveState === "saving"}
-          style={{
-            padding: "8px 24px", borderRadius: 5, fontSize: 14, fontWeight: 600,
-            background: saveBg,
-            border: "none", color: "#fff",
-            cursor: (isDirty && !validationError) ? "pointer" : "not-allowed",
-            opacity: (!isDirty || validationError) ? 0.55 : 1,
-            fontFamily: "inherit",
-            transition: "background 0.2s, opacity 0.2s",
-            minWidth: 80,
-          }}
-        >
-          {saveLabel}
-        </button>
-
-        {isDirty && !validationError && (
+      {/* Toolbar */}
+      <div className="yaml-toolbar">
+        <div className="yaml-toolbar-left">
           <button
-            onClick={() => { setValue(original); setSaveState("idle"); setValidationError(""); setErrorMsg(""); }}
-            style={{
-              padding: "8px 16px", borderRadius: 5, fontSize: 14, fontWeight: 500,
-              background: "none", border: "1px solid var(--border)",
-              color: "var(--text-secondary)", cursor: "pointer", fontFamily: "inherit",
-            }}
+            onClick={handleSave}
+            disabled={!isDirty || !!validationError || saveState === "saving"}
+            className="yaml-btn yaml-btn-save"
+            style={{ background: saveBg, opacity: (!isDirty || !!validationError) ? 0.5 : 1 }}
           >
-            Reset
+            {saveLabel}
           </button>
-        )}
 
-        {validationError && (
-          <span style={{ fontSize: 12, color: "#ed4245", maxWidth: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            ⚠ {validationError}
+          {isDirty && !validationError && (
+            <button
+              onClick={() => { setValue(original); setSaveState("idle"); setValidationError(""); setErrorMsg(""); }}
+              className="yaml-btn yaml-btn-ghost"
+            >
+              Reset
+            </button>
+          )}
+
+          <button onClick={handleCopy} className="yaml-btn yaml-btn-ghost" title="Copy config to clipboard">
+            {copyState === "copied" ? "✓ Copied" : "Copy"}
+          </button>
+
+          <button onClick={handlePaste} className="yaml-btn yaml-btn-ghost" title="Paste config from clipboard">
+            Paste
+          </button>
+        </div>
+
+        <div className="yaml-toolbar-right">
+          {validationError && (
+            <span className="yaml-error-msg">⚠ {validationError}</span>
+          )}
+          {saveState === "error" && errorMsg && (
+            <span className="yaml-error-msg">⚠ {errorMsg}</span>
+          )}
+          <span className="yaml-meta">
+            <span className="yaml-meta-hint">Ctrl+S to save</span>
+            <span> · {lines} lines</span>
+            {isDirty && <span className="yaml-dirty-dot"> ● unsaved</span>}
           </span>
-        )}
-        {saveState === "error" && errorMsg && (
-          <span style={{ fontSize: 12, color: "#ed4245" }}>⚠ {errorMsg}</span>
-        )}
-
-        <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--text-muted)", fontFamily: "monospace" }}>
-          Ctrl+S to save · {lines.length} lines
-          {isDirty && <span style={{ color: "var(--accent)", marginLeft: 8 }}>● unsaved</span>}
-        </span>
+        </div>
       </div>
 
       {loading ? (
-        <div style={{
-          height: 520, borderRadius: 6, border: "1px solid var(--border)",
-          background: "var(--yaml-bg)", display: "flex", alignItems: "center",
-          justifyContent: "center", color: "var(--text-muted)", fontSize: 13,
-        }}>
-          Loading configuration…
-        </div>
+        <div className="yaml-loading">Loading configuration…</div>
       ) : (
-        <div className="yaml-cm-wrap" style={{
-          height: "calc(100vh - 240px)", minHeight: 400,
-          borderRadius: 6, border: "1px solid var(--border)",
-          overflow: "hidden",
-        }}>
+        <div className="yaml-cm-wrap yaml-editor-container">
           <CodeMirror
             value={value}
             onChange={handleChange}

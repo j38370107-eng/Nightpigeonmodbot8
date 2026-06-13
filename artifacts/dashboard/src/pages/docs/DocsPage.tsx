@@ -116,8 +116,8 @@ function SchemaTable({ fields, depth = 0 }: { fields: SchemaField[]; depth?: num
       )}
       <tbody>
         {fields.map((field, i) => (
-          <>
-            <tr key={i} style={{ borderBottom: field.children ? "none" : "1px solid var(--border)", background: depth > 0 ? "rgba(255,255,255,0.02)" : undefined }}>
+          <React.Fragment key={i}>
+            <tr style={{ borderBottom: field.children ? "none" : "1px solid var(--border)", background: depth > 0 ? "rgba(255,255,255,0.02)" : undefined }}>
               <td style={{ ...tdStyle, paddingLeft: 12 + depth * 20, fontFamily: "monospace", color: "var(--accent)", fontSize: 12 }}>
                 {depth > 0 && <span style={{ color: "var(--text-muted)", marginRight: 6 }}>└</span>}
                 {field.key}
@@ -127,13 +127,13 @@ function SchemaTable({ fields, depth = 0 }: { fields: SchemaField[]; depth?: num
               <td style={tdStyle}>{field.description}</td>
             </tr>
             {field.children && (
-              <tr key={`${i}-ch`} style={{ borderBottom: "1px solid var(--border)" }}>
+              <tr style={{ borderBottom: "1px solid var(--border)" }}>
                 <td colSpan={4} style={{ padding: 0 }}>
                   <SchemaTable fields={field.children} depth={depth + 1} />
                 </td>
               </tr>
             )}
-          </>
+          </React.Fragment>
         ))}
       </tbody>
     </table>

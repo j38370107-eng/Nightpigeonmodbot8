@@ -66,11 +66,11 @@ input, textarea, select { font-family: inherit; }
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 0 24px;
-  gap: 24px;
+  padding: 0 20px;
+  gap: 12px;
   background: var(--bg-nav);
   border-bottom: 1px solid var(--border);
-  z-index: 50;
+  z-index: 100;
 }
 
 .dash-nav-brand {
@@ -78,7 +78,23 @@ input, textarea, select { font-family: inherit; }
   font-weight: 700;
   color: var(--text-primary);
   white-space: nowrap;
-  margin-right: 8px;
+}
+
+.dash-nav-guild {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+}
+
+.dash-nav-guild-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
 }
 
 .dash-nav-links {
@@ -100,6 +116,9 @@ input, textarea, select { font-family: inherit; }
   transition: color 0.15s, background 0.15s;
   white-space: nowrap;
   font-family: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
 .dash-nav-link:hover {
@@ -113,10 +132,218 @@ input, textarea, select { font-family: inherit; }
   text-underline-offset: 3px;
 }
 
+.dash-nav-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 5px;
+  margin-left: auto;
+  transition: background 0.15s, color 0.15s;
+}
+
+.dash-nav-hamburger:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary);
+}
+
+/* Mobile dropdown menu */
+.dash-mobile-menu {
+  display: none;
+  flex-direction: column;
+  background: var(--bg-nav);
+  border-bottom: 1px solid var(--border);
+  z-index: 99;
+  padding: 8px 0;
+}
+
+.dash-mobile-link {
+  display: block;
+  width: 100%;
+  padding: 13px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s, color 0.1s;
+}
+
+.dash-mobile-link:last-child { border-bottom: none; }
+
+.dash-mobile-link:hover,
+.dash-mobile-link:active {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+}
+
+.dash-mobile-link--danger { color: var(--danger); }
+.dash-mobile-link--danger:hover { color: var(--danger); }
+
 .dash-main {
   flex: 1;
   overflow: auto;
   background: var(--bg-primary);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── YAML editor page ───────────────────────────────────────────────────────── */
+
+.yaml-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 28px 28px 0;
+  box-sizing: border-box;
+}
+
+.yaml-page-header {
+  flex-shrink: 0;
+  margin-bottom: 14px;
+}
+
+.yaml-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.yaml-toolbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.yaml-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.yaml-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.yaml-btn {
+  padding: 7px 16px;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s, filter 0.15s;
+  white-space: nowrap;
+}
+
+.yaml-btn:disabled { cursor: not-allowed; }
+
+.yaml-btn-save {
+  color: #fff;
+  min-width: 70px;
+}
+
+.yaml-btn-save:not(:disabled):hover { filter: brightness(1.1); }
+
+.yaml-btn-ghost {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.yaml-btn-ghost:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--text-primary);
+}
+
+.yaml-error-msg {
+  font-size: 12px;
+  color: var(--danger);
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.yaml-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: monospace;
+  white-space: nowrap;
+}
+
+.yaml-meta-hint { color: var(--text-muted); }
+
+.yaml-dirty-dot { color: var(--accent); }
+
+.yaml-loading {
+  flex: 1;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--yaml-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 13px;
+  min-height: 300px;
+}
+
+.yaml-editor-container {
+  flex: 1;
+  min-height: 0;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 0;
+}
+
+/* ── Mobile breakpoint ─────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .dash-nav {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .dash-nav-brand { font-size: 14px; }
+
+  .dash-nav-guild-name { max-width: 100px; }
+
+  .dash-nav-links { display: none; }
+
+  .dash-nav-hamburger { display: flex; }
+
+  .dash-mobile-menu { display: flex; }
+
+  .yaml-page {
+    padding: 16px 14px 0;
+  }
+
+  .yaml-page-title { font-size: 18px; }
+
+  .yaml-toolbar-right .yaml-meta-hint { display: none; }
+
+  .yaml-error-msg { max-width: 200px; }
 }
 
 /* ── YAML editor ────────────────────────────────────────────────────────────── */
