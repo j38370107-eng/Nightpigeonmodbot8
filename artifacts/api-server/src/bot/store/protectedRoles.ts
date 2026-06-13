@@ -4,10 +4,17 @@ import { dbSet, dbGetAll } from "./db";
 const STORE = "protectedRoles";
 const cache = new Map<string, string[]>();
 
-export async function initProtectedRolesStore(): Promise<void> {
+async function loadFromDb(): Promise<void> {
   const rows = await dbGetAll<string[]>(STORE);
   for (const { key, data } of rows) cache.set(key, Array.isArray(data) ? data : []);
-  logger.info({ count: rows.length }, "Loaded protectedRoles store from DB");
+}
+
+export async function initProtectedRolesStore(): Promise<void> {
+  await loadFromDb();
+  logger.info({ count: cache.size }, "Loaded protectedRoles store from DB");
+  setInterval(() => {
+    loadFromDb().catch((err) => logger.error({ err }, "Failed to refresh protectedRoles cache"));
+  }, 5_000);
 }
 
 function save(guildId: string): void {

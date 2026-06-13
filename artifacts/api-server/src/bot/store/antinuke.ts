@@ -140,10 +140,17 @@ const DEFAULT: AntiNukeConfig = {
 
 const cache = new Map<string, AntiNukeConfig>();
 
-export async function initAntinukeStore(): Promise<void> {
+async function loadFromDb(): Promise<void> {
   const rows = await dbGetAll<AntiNukeConfig>(STORE);
   for (const { key, data } of rows) cache.set(key, data);
-  logger.info({ count: rows.length }, "Loaded antinuke store from DB");
+}
+
+export async function initAntinukeStore(): Promise<void> {
+  await loadFromDb();
+  logger.info({ count: cache.size }, "Loaded antinuke store from DB");
+  setInterval(() => {
+    loadFromDb().catch((err) => logger.error({ err }, "Failed to refresh antinuke cache"));
+  }, 5_000);
 }
 
 function save(guildId: string): void {

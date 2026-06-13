@@ -5,10 +5,17 @@ const STORE = "modroles";
 
 const cache = new Map<string, string[]>();
 
-export async function initModrolesStore(): Promise<void> {
+async function loadFromDb(): Promise<void> {
   const rows = await dbGetAll<string[]>(STORE);
   for (const { key, data } of rows) cache.set(key, data);
-  logger.info({ count: rows.length }, "Loaded modroles store from DB");
+}
+
+export async function initModrolesStore(): Promise<void> {
+  await loadFromDb();
+  logger.info({ count: cache.size }, "Loaded modroles store from DB");
+  setInterval(() => {
+    loadFromDb().catch((err) => logger.error({ err }, "Failed to refresh modroles cache"));
+  }, 5_000);
 }
 
 function save(guildId: string): void {
