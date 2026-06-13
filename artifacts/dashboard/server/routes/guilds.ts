@@ -913,123 +913,50 @@ router.delete("/:guildId/custom-commands/:cmdId", ...auth, async (req: any, res:
 
 // ── YAML Config ───────────────────────────────────────────────────────────────
 
-const DAY_MS_YAML = 86_400_000;
+const DEFAULT_YAML = `# NightPigeon configuration
+# Edit this file to configure your server.
+# Changes take effect within a few seconds.
+
+prefix: ">"
+
+# Permission levels — assign a level (0-100) to users, roles, or commands.
+# 0 = everyone, 100 = bot owner only
+levels:
+  users: {}
+  roles: {}
+  commands: {}
+
+# Tags — custom text responses
+# Example: greet: "Welcome to the server, {user}!"
+tags: {}
+
+# Plugins
+plugins: {}
+`;
+
+async function ensureGuildConfigsTable(): Promise<void> {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS guild_configs (
+      guild_id TEXT PRIMARY KEY,
+      config   TEXT NOT NULL DEFAULT ''
+    )
+  `);
+}
 
 router.get("/:guildId/yaml-config", ...auth, async (req: any, res: any) => {
   const { guildId } = req.params;
-
-  // If raw YAML exists in guild_configs, return it directly (preferred)
   try {
-    const rawRes = await pool.query(
+    await ensureGuildConfigsTable();
+    const result = await pool.query(
       "SELECT config FROM guild_configs WHERE guild_id = $1",
       [guildId]
     );
-    if (rawRes.rows[0]?.config) {
-      return res.json({ yaml: rawRes.rows[0].config as string });
-    }
-  } catch {
-    // table may not exist yet — fall through to generate from JSON stores
+    const rawYaml = result.rows[0]?.config;
+    return res.json({ yaml: rawYaml && rawYaml.trim() ? rawYaml : DEFAULT_YAML });
+  } catch (e: any) {
+    return res.status(500).json({ error: e.message });
   }
 
-  const [
-    settings, muteConfig, modRoles, protectedRoles, lockdownChannels,
-    automodCfg, antinukeCfg, antiraidCfg, serverlogCfg, ticketCfg,
-  ] = await Promise.all([
-    dbGet<any>("settings", guildId).then(s => s ?? {}),
-    dbGet<any>("muteConfig", guildId).then(c => c ?? {}),
-    dbGet<string[]>("modroles", guildId).then(r => r ?? []),
-    dbGet<string[]>("protectedRoles", guildId).then(r => r ?? []),
-    dbGet<string[]>("lockdown", guildId).then(c => c ?? []),
-    dbGet<any>("automod", guildId).then(a => a ?? {}),
-    dbGet<any>("antinuke", guildId).then(a => a ?? {}),
-    dbGet<any>("antiraid", guildId).then(a => a ?? {}),
-    dbGet<any>("serverlog", guildId).then(s => s ?? {}),
-    dbGet<any>("ticketConfig", guildId).then(t => t ?? {}),
-  ]);
-
-  const warnExpiryDays = settings.warnExpiryMs != null
-    ? (settings.warnExpiryMs === 0 ? 0 : Math.round(settings.warnExpiryMs / DAY_MS_YAML))
-    : 30;
-  const automodWarnExpiryDays = settings.automodWarnExpiryMs != null
-    ? (settings.automodWarnExpiryMs === 0 ? 0 : Math.round(settings.automodWarnExpiryMs / DAY_MS_YAML))
-    : 7;
-
-  const cfg: any = {
-    prefix: settings.prefix ?? ">",
-
-    moderation: {
-      logChannel: settings.logChannelId ?? "",
-      warnExpiryDays,
-      automodWarnExpiryDays,
-      modRoles,
-      protectedRoles,
-      lockdownChannels,
-      mute: {
-        mode: muteConfig.mode ?? "timeout",
-        muteRoleId: muteConfig.muteRoleId ?? "",
-        stripRoles: muteConfig.stripRoles ?? false,
-      },
-      warnEscalation: settings.warnEscalation ?? { steps: [] },
-    },
-
-    automod: Object.keys(automodCfg).length > 0 ? automodCfg : {
-      enabled: false,
-      wordFilter: { enabled: false, words: [], action: "warn", reason: "Blacklisted word" },
-      linkFilter: { enabled: false, whitelist: [], action: "warn" },
-      spamFilter: { enabled: false, maxMessages: 5, windowMs: 5000, action: "mute" },
-      mentionFilter: { enabled: false, maxMentions: 5, action: "warn" },
-      capsFilter: { enabled: false, threshold: 70, minLength: 8, action: "warn" },
-    },
-
-    antinuke: Object.keys(antinukeCfg).length > 0 ? antinukeCfg : {
-      enabled: false,
-      action: "ban",
-      windowMs: 10000,
-      whitelist: [],
-      whitelistRoles: [],
-      logChannel: "",
-      dmOwner: true,
-      thresholds: {
-        channelDelete: 3, channelCreate: 5,
-        roleDelete: 3, roleCreate: 5,
-        ban: 3, kick: 5,
-        webhookCreate: 3, webhookDelete: 3,
-        massTimeout: 5,
-      },
-    },
-
-    antiraid: Object.keys(antiraidCfg).length > 0 ? antiraidCfg : {
-      enabled: false,
-      joinThreshold: 10,
-      joinWindowMs: 10000,
-      action: "kick",
-      lockdown: false,
-      newAccountEnabled: false,
-      newAccountAgeDays: 7,
-      whitelist: [],
-      whitelistRoles: [],
-      logChannel: "",
-    },
-
-    logging: Object.keys(serverlogCfg).length > 0 ? serverlogCfg : {
-      enabled: false,
-      combinedChannelId: "",
-      splitChannels: false,
-      categoryChannels: {},
-      disabledEvents: [],
-      ignoredChannels: [],
-      ignoredRoles: [],
-      logBotActions: false,
-    },
-
-    tickets: Object.keys(ticketCfg).length > 0 ? ticketCfg : {
-      enabled: false,
-      openMessage: "Your ticket has been opened!",
-    },
-  };
-
-  const yamlStr = yaml.dump(cfg, { indent: 2, lineWidth: 120, quotingType: '"', forceQuotes: false });
-  res.json({ yaml: yamlStr });
 });
 
 router.put("/:guildId/yaml-config", ...auth, async (req: any, res: any) => {
@@ -1037,80 +964,29 @@ router.put("/:guildId/yaml-config", ...auth, async (req: any, res: any) => {
   const { yaml: yamlText } = req.body;
   if (typeof yamlText !== "string") return res.status(400).json({ error: "yaml string required" });
 
-  let cfg: any;
   try {
-    cfg = yaml.load(yamlText);
+    const parsed = yaml.load(yamlText);
+    if (!parsed || typeof parsed !== "object") {
+      return res.status(400).json({ error: "Config must be a YAML mapping at the top level" });
+    }
   } catch (e: any) {
     return res.status(400).json({ error: `Invalid YAML: ${e.message}` });
   }
 
-  if (!cfg || typeof cfg !== "object") return res.status(400).json({ error: "Config must be a YAML object" });
-
-  const saves: Promise<any>[] = [];
-
-  if (cfg.moderation) {
-    const m = cfg.moderation;
-    saves.push(
-      (async () => {
-        const settings = (await dbGet<any>("settings", guildId)) ?? {};
-        const updated: any = { ...settings };
-        if (cfg.prefix !== undefined) updated.prefix = cfg.prefix;
-        if (m.logChannel !== undefined) updated.logChannelId = m.logChannel || undefined;
-        if (m.warnExpiryDays !== undefined) {
-          const d = Number(m.warnExpiryDays);
-          updated.warnExpiryMs = isNaN(d) ? updated.warnExpiryMs : d === 0 ? 0 : d * DAY_MS_YAML;
-        }
-        if (m.automodWarnExpiryDays !== undefined) {
-          const d = Number(m.automodWarnExpiryDays);
-          updated.automodWarnExpiryMs = isNaN(d) ? updated.automodWarnExpiryMs : d === 0 ? 0 : d * DAY_MS_YAML;
-        }
-        if (m.warnEscalation !== undefined) updated.warnEscalation = m.warnEscalation;
-        await dbSet("settings", guildId, updated);
-      })()
-    );
-    if (Array.isArray(m.modRoles)) saves.push(dbSet("modroles", guildId, m.modRoles));
-    if (Array.isArray(m.protectedRoles)) saves.push(dbSet("protectedRoles", guildId, m.protectedRoles));
-    if (Array.isArray(m.lockdownChannels)) saves.push(dbSet("lockdown", guildId, m.lockdownChannels));
-    if (m.mute) {
-      saves.push(
-        (async () => {
-          const existing = (await dbGet<any>("muteConfig", guildId)) ?? {};
-          await dbSet("muteConfig", guildId, { ...existing, ...m.mute });
-        })()
-      );
-    }
-  } else if (cfg.prefix !== undefined) {
-    saves.push(
-      (async () => {
-        const settings = (await dbGet<any>("settings", guildId)) ?? {};
-        await dbSet("settings", guildId, { ...settings, prefix: cfg.prefix });
-      })()
-    );
-  }
-
-  if (cfg.automod) saves.push(dbSet("automod", guildId, cfg.automod));
-  if (cfg.antinuke) saves.push(dbSet("antinuke", guildId, cfg.antinuke));
-  if (cfg.antiraid) saves.push(dbSet("antiraid", guildId, cfg.antiraid));
-  if (cfg.logging) saves.push(dbSet("serverlog", guildId, cfg.logging));
-  if (cfg.tickets) saves.push(dbSet("ticketConfig", guildId, cfg.tickets));
-
-  await Promise.all(saves);
-
-  // Save raw YAML to guild_configs so the bot can read it directly
   try {
+    await ensureGuildConfigsTable();
     await pool.query(
       `INSERT INTO guild_configs (guild_id, config)
        VALUES ($1, $2)
        ON CONFLICT (guild_id) DO UPDATE SET config = EXCLUDED.config`,
       [guildId, yamlText]
     );
-  } catch {
-    // non-fatal if table doesn't exist yet
+  } catch (e: any) {
+    return res.status(500).json({ error: e.message });
   }
 
-  // Notify bot to refresh caches
+  // Notify bot to invalidate its config cache
   const botApiUrl = process.env["BOT_API_URL"] ?? "http://localhost:3000";
-  fetch(`${botApiUrl}/api/cache/automod/${guildId}`, { method: "POST" }).catch(() => {});
   fetch(`${botApiUrl}/api/cache/yaml-config/${guildId}`, { method: "POST" }).catch(() => {});
 
   res.json({ ok: true });
