@@ -917,7 +917,7 @@ const DEFAULT_YAML = `# NightPigeon configuration
 # Edit this file to configure your server.
 # Changes take effect within a few seconds.
 
-prefix: ">"
+prefix: "!"
 
 # Permission levels — assign a level (0-100) to users, roles, or commands.
 # 0 = everyone, 100 = bot owner only

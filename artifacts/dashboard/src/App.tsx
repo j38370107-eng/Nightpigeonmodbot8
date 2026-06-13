@@ -8,6 +8,7 @@ import Apply from "./pages/Apply";
 import DashboardLayout from "./components/DashboardLayout";
 import YamlConfig from "./pages/dashboard/YamlConfig";
 import Docs from "./pages/dashboard/Docs";
+import DocsPage from "./pages/docs/DocsPage";
 
 interface AuthCtx {
   user: any | null;
@@ -49,6 +50,8 @@ export default function App() {
             <Route path="config" element={<YamlConfig />} />
             <Route path="docs" element={<Docs />} />
           </Route>
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/docs/:pageId" element={<DocsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
