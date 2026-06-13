@@ -1,11 +1,7 @@
-import { Client, GatewayIntentBits, Partials, Collection } from "discord.js";
+import { Client, GatewayIntentBits } from "discord.js";
 import { logger } from "../lib/logger";
-import { loadCommands } from "./commands";
-import { registerEvents } from "./events";
-import { initAllStores } from "./store";
-import { refreshShortcutsFromDb } from "./store/shortcuts";
-import { refreshCustomCommandsFromDb } from "./store/customCommands";
-import { refreshAutomodFromDb } from "./store/automod";
+import { initDb } from "./store/db";
+import { initGuildConfigStore } from "./store/guildConfig";
 
 export async function startBot(): Promise<Client | null> {
   const token = process.env["DISCORD_BOT_TOKEN"];
@@ -14,41 +10,18 @@ export async function startBot(): Promise<Client | null> {
     return null;
   }
 
-  await initAllStores();
+  await initDb();
+  await initGuildConfigStore();
 
   const client = new Client({
-    intents: [
-      GatewayIntentBits.Guilds,
-      GatewayIntentBits.GuildMessages,
-      GatewayIntentBits.GuildMembers,
-      GatewayIntentBits.MessageContent,
-      GatewayIntentBits.GuildModeration,
-      GatewayIntentBits.GuildVoiceStates,
-    ],
-    partials: [
-      Partials.Message,
-      Partials.Channel,
-      Partials.GuildMember,
-    ],
+    intents: [GatewayIntentBits.Guilds],
     allowedMentions: { repliedUser: false },
   });
 
-  (client as any).commands = new Collection();
-  loadCommands(client);
-  registerEvents(client);
+  client.once("ready", (c) => {
+    logger.info({ tag: c.user.tag }, "NightPigeon is online");
+  });
 
   await client.login(token);
-  logger.info("Discord bot logged in");
-
-  // Refresh shortcuts and custom commands from DB every 30 s so that changes
-  // made via the dashboard take effect without a bot restart.
-  setInterval(() => {
-    Promise.all([
-      refreshShortcutsFromDb().catch((err) => logger.warn({ err }, "shortcuts refresh failed")),
-      refreshCustomCommandsFromDb().catch((err) => logger.warn({ err }, "customCommands refresh failed")),
-      refreshAutomodFromDb().catch((err) => logger.warn({ err }, "automod refresh failed")),
-    ]);
-  }, 10_000);
-
   return client;
 }

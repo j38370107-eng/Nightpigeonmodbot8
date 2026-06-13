@@ -1,15 +1,14 @@
 import { useEffect, useState, useCallback } from "react";
 import { Outlet, useParams, NavLink, useNavigate } from "react-router-dom";
-import { useAuth, useMusic } from "../App";
+import { useAuth } from "../App";
 import { api } from "../lib/api";
-import { Volume2, VolumeX, Shield } from "lucide-react";
+import { Shield } from "lucide-react";
 
 const INVITE_URL = "https://discord.com/oauth2/authorize?client_id=1507550967275458660&permissions=6293600228863223&integration_type=0&scope=bot";
 
 export default function DashboardLayout() {
   const { guildId } = useParams<{ guildId: string }>();
   const { user, refetch } = useAuth();
-  const { muted, toggleMute } = useMusic();
   const navigate = useNavigate();
   const [guild, setGuild] = useState<any>(null);
   const [botChecked, setBotChecked] = useState(false);
@@ -74,7 +73,6 @@ export default function DashboardLayout() {
 
   return (
     <div className="dash-root">
-      {/* Top nav */}
       <header className="dash-nav">
         <span className="dash-nav-brand">NightPigeon Dashboard</span>
 
@@ -92,14 +90,10 @@ export default function DashboardLayout() {
           <NavLink to="" end className={({ isActive }) => `dash-nav-link${isActive ? " active" : ""}`}>Overview</NavLink>
           <NavLink to="config" className={({ isActive }) => `dash-nav-link${isActive ? " active" : ""}`}>Config</NavLink>
           <button className="dash-nav-link" onClick={() => navigate("/servers")}>Guilds</button>
-          <button className="dash-nav-link" onClick={toggleMute} title={muted ? "Unmute" : "Mute"} style={{ padding:"5px 8px" }}>
-            {muted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-          </button>
           <button className="dash-nav-link" onClick={handleLogout}>Log out</button>
         </div>
       </header>
 
-      {/* Main content */}
       <main className="dash-main">
         <Outlet />
       </main>
