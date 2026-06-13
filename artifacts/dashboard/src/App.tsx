@@ -6,7 +6,6 @@ import Login from "./pages/Login";
 import GuildSelect from "./pages/GuildSelect";
 import Apply from "./pages/Apply";
 import DashboardLayout from "./components/DashboardLayout";
-import Overview from "./pages/dashboard/Overview";
 import YamlConfig from "./pages/dashboard/YamlConfig";
 
 interface AuthCtx {
@@ -45,7 +44,7 @@ export default function App() {
           <Route path="/servers" element={<RequireAuth><GuildSelect /></RequireAuth>} />
           <Route path="/apply/:guildId/:formId" element={<Apply />} />
           <Route path="/dashboard/:guildId" element={<RequireAuth><DashboardLayout /></RequireAuth>}>
-            <Route index element={<Overview />} />
+            <Route index element={<YamlConfig />} />
             <Route path="config" element={<YamlConfig />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

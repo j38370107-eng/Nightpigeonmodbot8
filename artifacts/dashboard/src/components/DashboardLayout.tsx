@@ -87,7 +87,6 @@ export default function DashboardLayout() {
         </span>
 
         <div className="dash-nav-links">
-          <NavLink to="" end className={({ isActive }) => `dash-nav-link${isActive ? " active" : ""}`}>Overview</NavLink>
           <NavLink to="config" className={({ isActive }) => `dash-nav-link${isActive ? " active" : ""}`}>Config</NavLink>
           <button className="dash-nav-link" onClick={() => navigate("/servers")}>Guilds</button>
           <button className="dash-nav-link" onClick={handleLogout}>Log out</button>
